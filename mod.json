@@ -5,7 +5,8 @@
 	"id": "cdc.level_thumbnails",
 	"name": "Level Thumbnails",
 	"developer": "cdc",
-	"description": " Adds thumbnails to level cells.",
+	"repository": "https://github.com/cdc-sys/level-thumbs-mod",
+	"description": " Adds thumbnails to levels in search.",
 	"dependencies":[{
         "id": "geode.node-ids",
         "version":">=1.7.1",
