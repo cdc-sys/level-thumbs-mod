@@ -1,0 +1,14 @@
+{
+	"geode": "2.0.0-beta.21",
+	"gd": {"win":"2.204","android":"2.205"},
+	"version": "v1.0.0",
+	"id": "cdc.level_thumbnails",
+	"name": "Level Thumbnails",
+	"developer": "cdc",
+	"description": "Adds thumbnails to levels in search",
+	"dependencies":[{
+        "id": "geode.node-ids",
+        "version":">=1.7.1",
+        "importance":"required"
+    }]
+}
