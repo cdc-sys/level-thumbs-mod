@@ -58,6 +58,11 @@ class $modify(MyLevelCell, LevelCell) {
 		if (this->m_fields->fetched){
 			return;
 		}
+		auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}",(int)this->m_level->m_levelID).c_str());
+		if (txtr && Mod::get()->getSettingValue<int64_t>("disable-cache") == 0){
+			this->onDownloadFinished(CCSprite::createWithTexture(txtr));
+			return;
+		}
 		this->retain();
 		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png",(int)this->m_level->m_levelID);
 	 web::AsyncWebRequest()

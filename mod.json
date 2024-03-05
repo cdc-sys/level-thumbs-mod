@@ -7,6 +7,16 @@
 	"developer": "cdc",
 	"repository": "https://github.com/cdc-sys/level-thumbs-mod",
 	"description": " Adds thumbnails to levels in search.",
+	"settings":{
+		"disable-cache": {
+            "name": "Disable Cache",
+            "description": "Disables the <cj>cache</c>.\nMakes updating thumbnails not require a game <cy>restart</c>.\n(0 = <cg>OFF</c>, 1 <cr>ON</c>)",
+            "type": "int",
+			"min":0,
+			"max":1,
+			"default":0
+        }
+	},
 	"dependencies":[{
         "id": "geode.node-ids",
         "version":">=1.7.1",
