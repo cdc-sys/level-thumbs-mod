@@ -130,8 +130,8 @@ class $modify(MyLevelCell, LevelCell) {
 		mask->drawPolygon(rectangle, 4, ccc4FFromccc3B({255, 0, 0}), 1, ccc4FFromccc3B({255, 125, 0}));
 		clippingNode->setStencil(mask);
 		clippingNode->addChild(image);
-		image->setScale((this->m_compactView ? 0.6f : 0.332f)/getQualityMultiplier());
-		image->setPosition({image->getScaledContentSize().width/2,image->getScaledContentSize().height/2});
+		image->setScale((this->m_compactView ? 0.5f : 0.332f)/getQualityMultiplier());
+		image->setPosition({image->getScaledContentSize().width/2,image->getScaledContentSize().height/2 + (this->m_compactView ? -32.5f : 0.f)});
 		this->addChild(clippingNode);
 		// 205, 235
 		clippingNode->setPosition({(this->m_compactView ? 235.f : 205.f),0});
