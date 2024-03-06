@@ -4,4 +4,4 @@
 
 # Credits
 
-Logo by [BritzXD [Twitter]](https://twitter.com/BriftXD)
+Logo by [BriftXD [Twitter]](https://twitter.com/BriftXD)
