@@ -59,7 +59,7 @@ class $modify(MyLevelCell, LevelCell) {
 			return;
 		}
 		auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}",(int)this->m_level->m_levelID).c_str());
-		if (txtr && Mod::get()->getSettingValue<int64_t>("disable-cache") == 0){
+		if (txtr && Mod::get()->getSettingValue<bool>("disableCache")){
 			this->onDownloadFinished(CCSprite::createWithTexture(txtr));
 			return;
 		}
