@@ -1,23 +1,31 @@
 {
 	"geode": "2.0.0-beta.21",
-	"gd": {"win":"2.204","android":"2.205"},
+	"gd": { "win": "2.204", "android": "2.205" },
 	"version": "v1.0.1",
 	"id": "cdc.level_thumbnails",
 	"name": "Level Thumbnails",
 	"developer": "cdc",
 	"repository": "https://github.com/cdc-sys/level-thumbs-mod",
-	"description": " Adds thumbnails to levels in search.",
-	"settings":{
+	"description": "Adds thumbnails to levels in search.",
+
+	"settings": {
 		"disableCache": {
-            "name": "Disable Cache",
-            "description": "Disables the <cj>cache</c>.\nMakes updating thumbnails not require a game <cy>restart</c>.",
+			"name": "Disable Cache",
+			"description": "Disables the <cj>cache</c>.\nMakes updating thumbnails not require a game <cy>restart</c>.",
 			"type": "bool",
 			"default": false
-        }
+		},
+		"alternativeSpacer": {
+			"name": "Use Alternative Separator",
+			"description": "Uses an alternative <cj>separator sprite</c> (streakb_01_001 instead of square02_001). This removes the <cy>rounded corners</c> with square02, but may cause issues with <cb>texture packs</c>.",
+			"type": "bool",
+			"default": false
+		}
 	},
-	"dependencies":[{
+
+	"dependencies": [{
         "id": "geode.node-ids",
-        "version":">=1.7.1",
-        "importance":"required"
-    }]
+        "version": ">=1.7.1",
+        "importance": "required"
+  }]
 }
