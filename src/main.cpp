@@ -5,11 +5,7 @@ using namespace geode::prelude;
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/web.hpp>
 
-class Downloader{
-	
-	public:
-	
-};
+
 class $modify(MyLevelCell, LevelCell) {
 	LoadingCircle* loadingIndicator;
 	CCSprite* placeholderImage;
@@ -28,7 +24,7 @@ class $modify(MyLevelCell, LevelCell) {
 		}*/
 		this->m_fields->background = getChildOfType<CCLayerColor>(this, 0);
 		this->m_fields->background->setZOrder(-2);
-		this->m_fields->separatorSprite = CCSprite::create("square02_001.png");
+		this->m_fields->separatorSprite = CCSprite::create(Mod::get()->getSettingValue<bool>("alternativeSpacer") ? "streakb_01_001.png" : "square02_001.png");
 		
 		auto mainLayer = this->getChildByID("main-layer");
 		auto mainMenu = mainLayer->getChildByID("main-menu");
@@ -38,9 +34,18 @@ class $modify(MyLevelCell, LevelCell) {
 		this->m_fields->loadingIndicator->setParentLayer(this);
 
 		this->m_fields->separatorSprite->setPosition({(this->m_compactView ? 241.f : 215.f),(this->m_compactView ? 25.f : 45.f)});
-		this->m_fields->separatorSprite->setScaleX(0.175f);
-		this->m_fields->separatorSprite->setScaleY((this->m_compactView ? 0.625f : 1.125f));
-		this->m_fields->separatorSprite->setSkewX({(this->m_compactView ? 49.f : 66.f)});
+		if (Mod::get()->getSettingValue<bool>("alternativeSpacer")) {
+			this->m_fields->separatorSprite->setScaleX((this->m_compactView ? 1.875f : 1.95f));
+			this->m_fields->separatorSprite->setScaleY((this->m_compactView ? 6.275f : 11.375f));
+			this->m_fields->separatorSprite->setSkewX({ (this->m_compactView ? 49.f : 66.f) });
+
+			this->m_fields->separatorSprite->setColor(ccColor3B{ 0, 0, 0 });
+		} else {
+			this->m_fields->separatorSprite->setScaleX(0.175f);
+			this->m_fields->separatorSprite->setScaleY((this->m_compactView ? 0.625f : 1.125f));
+			this->m_fields->separatorSprite->setSkewX({ (this->m_compactView ? 49.f : 66.f) });
+		}
+
 		this->m_fields->separatorSprite->setZOrder(-2);
 		this->m_fields->separatorSprite->setOpacity(50);
 		this->m_fields->separatorSprite->setVisible(false);	
@@ -54,57 +59,59 @@ class $modify(MyLevelCell, LevelCell) {
 
 		this->startDownload();
 	}
-	void startDownload(){
-		if (this->m_fields->fetched){
+
+	void startDownload() {
+		if (this->m_fields->fetched) {
 			return;
 		}
 		auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}",(int)this->m_level->m_levelID).c_str());
-		if (txtr && Mod::get()->getSettingValue<bool>("disableCache")){
+		if (txtr && Mod::get()->getSettingValue<bool>("disableCache")) {
 			this->onDownloadFinished(CCSprite::createWithTexture(txtr));
 			return;
 		}
 		this->retain();
 		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png",(int)this->m_level->m_levelID);
-	 web::AsyncWebRequest()
-    .fetch(URL)
-    .bytes()
-    .then([this](geode::ByteVector const& data) {
-		if (this->m_fields->fetchFailed == true){
-			this->m_fields->fetched = true;
-		}else{
-		auto image = Ref(new CCImage());
-		image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-		std::string theKey = fmt::format("thumb-{}",(int)this->m_level->m_levelID);
-		CCTextureCache::get()->removeTextureForKey(theKey.c_str());
-		auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
-		this->onDownloadFinished(CCSprite::createWithTexture(texture));
-		this->m_fields->fetched = true;
-		image->release();
-		this->autorelease();
-		}
-    })
-    .expect([this](std::string const& error) {
-		this->onDownloadFailed();
-		this->m_fields->fetchFailed = true;
-    });
-
+		web::AsyncWebRequest()
+		.fetch(URL)
+		.bytes()
+		.then([this](geode::ByteVector const& data) {
+			if (this->m_fields->fetchFailed == true) {
+				this->m_fields->fetched = true;
+			} else {
+				auto image = Ref(new CCImage());
+				image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+				std::string theKey = fmt::format("thumb-{}",(int)this->m_level->m_levelID);
+				CCTextureCache::get()->removeTextureForKey(theKey.c_str());
+				auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
+				this->onDownloadFinished(CCSprite::createWithTexture(texture));
+				this->m_fields->fetched = true;
+				image->release();
+				this->autorelease();
+			}
+		})
+		.expect([this](std::string const& error) {
+			this->onDownloadFailed();
+			this->m_fields->fetchFailed = true;
+		});
 	}
-	int getQualityMultiplier(){
+
+	int getQualityMultiplier() {
 		auto scaleFactor = CCDirector::sharedDirector()->getContentScaleFactor();
-		switch((int)scaleFactor){
+		switch((int)scaleFactor) {
 			case 1:
-			return 4;
-			break;
+				return 4;
+				break;
 			case 2:
-			return 2;
-			break;
+				return 2;
+				break;
 			case 4:
-			return 1;
-			break;
+				return 1;
+				break;
 		}
 		return 1;
 	}
-	void onDownloadFailed(){
+
+	void onDownloadFailed() {
 		this->m_fields->loadingIndicator->fadeAndRemove();
 		this->m_fields->separatorSprite->removeFromParent();
 		/*this->m_fields->notAvailable = CCLabelBMFont::create("N/A","goldFont.fnt");
@@ -112,7 +119,8 @@ class $modify(MyLevelCell, LevelCell) {
 		this->m_fields->notAvailable->setPosition({325,15});
 		this->addChild(m_fields->notAvailable);*/
 	}
-	void onDownloadFinished(CCSprite* sprite){
+
+	void onDownloadFinished(CCSprite* sprite) {
 		this->m_fields->loadingIndicator->fadeAndRemove();
 		CCSprite* image = sprite;
 		CCPoint rectangle[4] = {
@@ -141,6 +149,4 @@ class $modify(MyLevelCell, LevelCell) {
 		//this->m_fields->background->setSkewX(15);
 		this->m_fields->separatorSprite->setVisible(true);
 	}
-	
-
 };
