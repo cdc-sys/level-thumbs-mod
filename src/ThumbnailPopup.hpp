@@ -15,6 +15,7 @@ protected:
 	void onDownloadFinished(CCSprite* sprite);
 	void onDownloadFail();
 	void onDownload(CCObject*sender);
+	void openDiscordServerPopup();
 
 public:
 	static ThumbnailPopup* create(int id);

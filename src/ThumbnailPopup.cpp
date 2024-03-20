@@ -10,17 +10,31 @@ void ThumbnailPopup::onDownload(CCObject*sender){
 	std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", this->levelID);
 	CCApplication::sharedApplication()->openURL(URL.c_str());
 }
-//There is probably some bad/inneficient code in here.
+void ThumbnailPopup::openDiscordServerPopup(){
+	if (Mod::get()->getSavedValue<bool>("discord-ad-shown")){
+		return;
+	}
+	else{
+		Mod::get()->setSavedValue<bool>("discord-ad-shown",true);
+	}
+	createQuickPopup(
+        "Uh Oh!",
+        "Hm.. This level seems to not have a <cj>Thumbnail</c>..."
+        "Worry not! You can join our <cg>Discord Server</c> and submit a thumbnail <cy>YOURSELF!</c>",
+        "NO THANKS", "JOIN!",
+        [this](auto, bool btn2) {
+            if (btn2) {
+                CCApplication::sharedApplication()->openURL("https://discord.gg/K6M4RduZxY");
+            }
+        }
+    );
+}
 bool ThumbnailPopup::setup(int id) {
 	m_noElasticity = false;
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 
 	this->setTitle("Thumbnail");
 
-	//bool fetched = false;
-	//bool fetchFailed = false;
-
-	//LoadingCircle* loadingCircle = LoadingCircle::create();
 	CCMenu* downloadMenu = CCMenu::create();
 	CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
 	downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite,this,menu_selector(ThumbnailPopup::onDownload));
@@ -29,17 +43,16 @@ bool ThumbnailPopup::setup(int id) {
 	downloadMenu->setPosition({this->m_mainLayer->getContentWidth()-28,30});
 	downloadMenu->addChild(downloadBtn);
 	this->m_mainLayer->addChild(downloadMenu);
-	ThumbnailPopup::loadingCircle->setParentLayer(this->m_mainLayer);
-	ThumbnailPopup::loadingCircle->setPosition({ -70,-40 });
-	ThumbnailPopup::loadingCircle->setScale(1.f);
-	ThumbnailPopup::loadingCircle->show();
-	
-	//auto texture = nullptr;
+	this->loadingCircle->setParentLayer(this->m_mainLayer);
+	this->loadingCircle->setPosition({ -70,-40 });
+	this->loadingCircle->setScale(1.f);
+	this->loadingCircle->show();
+
 	auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}", levelID).c_str());
 	
 	if (txtr && !Mod::get()->getSettingValue<bool>("disableCache")) {
-		ThumbnailPopup::loadingCircle->fadeAndRemove();
-		ThumbnailPopup::onDownloadFinished(CCSprite::createWithTexture(txtr));
+		this->loadingCircle->fadeAndRemove();
+		this->onDownloadFinished(CCSprite::createWithTexture(txtr));
 	}
 	else {
 		this->retain();
@@ -49,26 +62,27 @@ bool ThumbnailPopup::setup(int id) {
 			.fetch(URL)
 			.bytes()
 			.then([=, this](geode::ByteVector const& data) {
-			if (ThumbnailPopup::fetchFailed == true) {
-				ThumbnailPopup::fetched = true;
+			if (this->fetchFailed == true) {
+				this->fetched = true;
 			}
 			else {
 				auto image = Ref(new CCImage());
 				image->initWithImageData(const_cast<uint8_t*>(data.data()), data.size());
 				std::string theKey = fmt::format("thumb-{}", levelID);
 				CCTextureCache::get()->removeTextureForKey(theKey.c_str());
-				ThumbnailPopup::texture = CCTextureCache::get()->addUIImage(image, theKey.c_str());
-				ThumbnailPopup::loadingCircle->fadeAndRemove();
-				ThumbnailPopup::onDownloadFinished(CCSprite::createWithTexture(ThumbnailPopup::texture));
-				ThumbnailPopup::fetched = true;
+				this->texture = CCTextureCache::get()->addUIImage(image, theKey.c_str());
+				this->loadingCircle->fadeAndRemove();
+				this->onDownloadFinished(CCSprite::createWithTexture(this->texture));
+				this->fetched = true;
 				image->release();
 				this->autorelease();
 			}
 				})
 			.expect([=, this](std::string const& error) {
-					ThumbnailPopup::loadingCircle->fadeAndRemove();
+					this->openDiscordServerPopup();
+					this->loadingCircle->fadeAndRemove();
 					this->onDownloadFail();
-					ThumbnailPopup::fetchFailed = true;
+					this->fetchFailed = true;
 				});
 	}
 
