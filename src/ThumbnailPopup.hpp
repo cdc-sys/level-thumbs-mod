@@ -10,9 +10,11 @@ protected:
 	int levelID;
 	LoadingCircle* loadingCircle = LoadingCircle::create();
 	CCTexture2D* texture = nullptr;
+	CCMenuItemSpriteExtra* downloadBtn;
 
 	void onDownloadFinished(CCSprite* sprite);
 	void onDownloadFail();
+	void onDownload(CCObject*sender);
 
 public:
 	static ThumbnailPopup* create(int id);

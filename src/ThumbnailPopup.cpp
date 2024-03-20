@@ -6,7 +6,10 @@ using namespace geode::prelude;
 #include <Geode/utils/web.hpp>
 #include "ThumbnailPopup.hpp"
 #include "utils.h"
-
+void ThumbnailPopup::onDownload(CCObject*sender){
+	std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", this->levelID);
+	CCApplication::sharedApplication()->openURL(URL.c_str());
+}
 //There is probably some bad/inneficient code in here.
 bool ThumbnailPopup::setup(int id) {
 	m_noElasticity = false;
@@ -18,6 +21,14 @@ bool ThumbnailPopup::setup(int id) {
 	//bool fetchFailed = false;
 
 	//LoadingCircle* loadingCircle = LoadingCircle::create();
+	CCMenu* downloadMenu = CCMenu::create();
+	CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
+	downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite,this,menu_selector(ThumbnailPopup::onDownload));
+	downloadBtn->setEnabled(false);
+	downloadBtn->setColor({125,125,125});
+	downloadMenu->setPosition({this->m_mainLayer->getContentWidth()-28,30});
+	downloadMenu->addChild(downloadBtn);
+	this->m_mainLayer->addChild(downloadMenu);
 	ThumbnailPopup::loadingCircle->setParentLayer(this->m_mainLayer);
 	ThumbnailPopup::loadingCircle->setPosition({ -70,-40 });
 	ThumbnailPopup::loadingCircle->setScale(1.f);
@@ -66,6 +77,8 @@ bool ThumbnailPopup::setup(int id) {
 
 void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
 	// thanks for fucking this up sheepdotcom
+	downloadBtn->setEnabled(true);
+	downloadBtn->setColor({255,255,255});
 	CCSprite* image = sprite;
 	image->setScale(0.65f / levelthumbs::getQualityMultiplier());
 	image->setPosition({(this->m_mainLayer->getContentWidth()/2),(this->m_mainLayer->getContentHeight()/2)-10.f});
