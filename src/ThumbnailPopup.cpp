@@ -19,9 +19,9 @@ void ThumbnailPopup::openDiscordServerPopup(){
 	}
 	createQuickPopup(
         "Uh Oh!",
-        "Hm.. This level seems to not have a <cj>Thumbnail</c>..."
-        "Worry not! You can join our <cg>Discord Server</c> and submit a thumbnail <cy>YOURSELF!</c>",
-        "NO THANKS", "JOIN!",
+        "Hm.. This level seems to not have a <cj>Thumbnail</c>...\n"
+        "Worry not! You can join our <cg>Discord Server</c> and submit a thumbnail <cy>YOURSELF!</c>\n<cb>(Don't worry, you can always find the server link in the mod about page..)</c>",
+        "No Thanks", "JOIN!",
         [this](auto, bool btn2) {
             if (btn2) {
                 CCApplication::sharedApplication()->openURL("https://discord.gg/K6M4RduZxY");
