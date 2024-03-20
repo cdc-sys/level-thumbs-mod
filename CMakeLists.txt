@@ -6,9 +6,11 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(LevelThumbnails VERSION 1.0.0)
 
-add_library(${PROJECT_NAME} SHARED
+file(GLOB_RECOURSE SOURCES
     src/*.cpp
-    # Add your cpp files here
+)
+add_library(${PROJECT_NAME} SHARED
+    ${SOURCES}
 )
 
 if (NOT DEFINED ENV{GEODE_SDK})
