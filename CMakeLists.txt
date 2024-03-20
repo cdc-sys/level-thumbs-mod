@@ -7,7 +7,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 project(LevelThumbnails VERSION 1.0.0)
 
 add_library(${PROJECT_NAME} SHARED
-    src/main.cpp
+    src/*.cpp
     # Add your cpp files here
 )
 

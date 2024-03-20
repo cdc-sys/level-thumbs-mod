@@ -4,7 +4,7 @@ using namespace geode::prelude;
 
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/web.hpp>
-
+#include "utils.h"
 
 class $modify(MyLevelCell, LevelCell) {
 	LoadingCircle* loadingIndicator;
@@ -95,22 +95,6 @@ class $modify(MyLevelCell, LevelCell) {
 		});
 	}
 
-	int getQualityMultiplier() {
-		auto scaleFactor = CCDirector::sharedDirector()->getContentScaleFactor();
-		switch((int)scaleFactor) {
-			case 1:
-				return 4;
-				break;
-			case 2:
-				return 2;
-				break;
-			case 4:
-				return 1;
-				break;
-		}
-		return 1;
-	}
-
 	void onDownloadFailed() {
 		this->m_fields->loadingIndicator->fadeAndRemove();
 		this->m_fields->separatorSprite->removeFromParent();
@@ -138,7 +122,7 @@ class $modify(MyLevelCell, LevelCell) {
 		mask->drawPolygon(rectangle, 4, ccc4FFromccc3B({255, 0, 0}), 1, ccc4FFromccc3B({255, 125, 0}));
 		clippingNode->setStencil(mask);
 		clippingNode->addChild(image);
-		image->setScale((this->m_compactView ? 0.5f : 0.332f)/getQualityMultiplier());
+		image->setScale((this->m_compactView ? 0.5f : 0.332f)/levelthumbs::getQualityMultiplier());
 		image->setPosition({image->getScaledContentSize().width/2,image->getScaledContentSize().height/2 + (this->m_compactView ? -32.5f : 0.f)});
 		this->addChild(clippingNode);
 		// 205, 235

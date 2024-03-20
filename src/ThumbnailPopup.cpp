@@ -5,13 +5,14 @@ using namespace geode::prelude;
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include "ThumbnailPopup.hpp"
+#include "utils.h"
 
 //There is probably some bad/inneficient code in here.
 bool ThumbnailPopup::setup(int id) {
 	m_noElasticity = true;
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-	this->setTitle("Testing");
+	this->setTitle("Thumbnail");
 
 	//bool fetched = false;
 	//bool fetchFailed = false;
@@ -23,7 +24,7 @@ bool ThumbnailPopup::setup(int id) {
 	ThumbnailPopup::loadingCircle->show();
 	
 	//auto texture = nullptr;
-	auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}", id).c_str());
+	auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}", levelID).c_str());
 	
 	if (txtr && !Mod::get()->getSettingValue<bool>("disableCache")) {
 		ThumbnailPopup::loadingCircle->fadeAndRemove();
@@ -31,7 +32,8 @@ bool ThumbnailPopup::setup(int id) {
 	}
 	else {
 		this->retain();
-		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", id);
+		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", levelID);
+		geode::log::info("{}",URL);
 		web::AsyncWebRequest()
 			.fetch(URL)
 			.bytes()
@@ -42,7 +44,7 @@ bool ThumbnailPopup::setup(int id) {
 			else {
 				auto image = Ref(new CCImage());
 				image->initWithImageData(const_cast<uint8_t*>(data.data()), data.size());
-				std::string theKey = fmt::format("thumb-{}", id);
+				std::string theKey = fmt::format("thumb-{}", levelID);
 				CCTextureCache::get()->removeTextureForKey(theKey.c_str());
 				ThumbnailPopup::texture = CCTextureCache::get()->addUIImage(image, theKey.c_str());
 				ThumbnailPopup::loadingCircle->fadeAndRemove();
@@ -62,35 +64,18 @@ bool ThumbnailPopup::setup(int id) {
 }
 
 void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
+	// thanks for fucking this up sheepdotcom
 	CCSprite* image = sprite;
-	CCPoint rectangle[4] = {
-		CCPoint(0, 0),
-		CCPoint(31.8f, 90),
-		CCPoint(160.f, 90),
-		CCPoint(160.f, 0)
-		//CCPoint(160.f, 400),
-		//CCPoint(160.f, 0)
-	};
-
-	auto clippingNode = CCClippingNode::create();
-
-	auto mask = CCDrawNode::create();
-	mask->drawPolygon(rectangle, 4, ccc4FFromccc3B({ 255, 0, 0 }), 1, ccc4FFromccc3B({ 255, 125, 0 }));
-	clippingNode->setStencil(mask);
-	clippingNode->addChild(image);
-	image->setScale(0.332f / 1);
+	image->setScale(0.332f / levelthumbs::getQualityMultiplier());
 	image->setPosition({ image->getScaledContentSize().width / 2,image->getScaledContentSize().height / 2 + 0.f });
-	this->addChild(clippingNode);
 	this->addChild(image);
 	// 205, 235
-	clippingNode->setPosition({ 205.f,0 });
-	clippingNode->setScale(1.f);
-	clippingNode->setZOrder(-1);
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id) {
 	auto ret = new ThumbnailPopup();
 	if (ret && ret->initAnchored(420, 240, -1, "GJ_square01.png")) {
+		ret->levelID = id;
 		ret->autorelease();
 		return ret;
 	}
@@ -99,21 +84,7 @@ ThumbnailPopup* ThumbnailPopup::create(int id) {
 }
 
 //Copying so much code from main.cpp be like
-int getQualityMultiplier() {
-	auto scaleFactor = CCDirector::sharedDirector()->getContentScaleFactor();
-	switch ((int)scaleFactor) {
-	case 1:
-		return 4;
-		break;
-	case 2:
-		return 2;
-		break;
-	case 4:
-		return 1;
-		break;
-	}
-	return 1;
-}
+
 
 class $modify(LevelInfoLayer2, LevelInfoLayer) {
 	void onThumbnailButton(CCObject * target) {
