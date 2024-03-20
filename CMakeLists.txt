@@ -6,7 +6,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(LevelThumbnails VERSION 1.0.0)
 
-file(GLOB_RECOURSE SOURCES
+file(GLOB_RECURSE SOURCES
     src/*.cpp
 )
 add_library(${PROJECT_NAME} SHARED
