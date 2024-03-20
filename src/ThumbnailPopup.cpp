@@ -117,9 +117,6 @@ ThumbnailPopup* ThumbnailPopup::create(int id) {
 	return nullptr;
 }
 
-//Copying so much code from main.cpp be like
-
-
 class $modify(LevelInfoLayer2, LevelInfoLayer) {
 	void onThumbnailButton(CCObject * target) {
 		int id = this->m_level->m_levelID;
