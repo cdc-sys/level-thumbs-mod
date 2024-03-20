@@ -10,7 +10,8 @@
 
 	"resources": {
 		"sprites": [
-			"resources/thumbnailButton.png"
+			"resources/thumbnailButton.png",
+			"resources/noThumb.png"
 		]
 	},
 

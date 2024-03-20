@@ -9,7 +9,7 @@ using namespace geode::prelude;
 
 //There is probably some bad/inneficient code in here.
 bool ThumbnailPopup::setup(int id) {
-	m_noElasticity = true;
+	m_noElasticity = false;
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 
 	this->setTitle("Thumbnail");
@@ -18,9 +18,9 @@ bool ThumbnailPopup::setup(int id) {
 	//bool fetchFailed = false;
 
 	//LoadingCircle* loadingCircle = LoadingCircle::create();
-	ThumbnailPopup::loadingCircle->setParentLayer(this);
-	ThumbnailPopup::loadingCircle->setPosition({ 0,0 });
-	ThumbnailPopup::loadingCircle->setScale(0.5f);
+	ThumbnailPopup::loadingCircle->setParentLayer(this->m_mainLayer);
+	ThumbnailPopup::loadingCircle->setPosition({ -70,-40 });
+	ThumbnailPopup::loadingCircle->setScale(1.f);
 	ThumbnailPopup::loadingCircle->show();
 	
 	//auto texture = nullptr;
@@ -56,6 +56,7 @@ bool ThumbnailPopup::setup(int id) {
 				})
 			.expect([=, this](std::string const& error) {
 					ThumbnailPopup::loadingCircle->fadeAndRemove();
+					this->onDownloadFail();
 					ThumbnailPopup::fetchFailed = true;
 				});
 	}
@@ -66,16 +67,22 @@ bool ThumbnailPopup::setup(int id) {
 void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
 	// thanks for fucking this up sheepdotcom
 	CCSprite* image = sprite;
-	image->setScale(0.332f / levelthumbs::getQualityMultiplier());
-	image->setPosition({ image->getScaledContentSize().width / 2,image->getScaledContentSize().height / 2 + 0.f });
-	this->addChild(image);
-	// 205, 235
+	image->setScale(0.65f / levelthumbs::getQualityMultiplier());
+	image->setPosition({(this->m_mainLayer->getContentWidth()/2),(this->m_mainLayer->getContentHeight()/2)-10.f});
+	this->m_mainLayer->addChild(image);
+}
+void ThumbnailPopup::onDownloadFail() {
+	// thanks for the image cvolton ;)
+	CCSprite* image = CCSprite::create("noThumb.png"_spr);
+	image->setScale(0.65f );
+	image->setPosition({(this->m_mainLayer->getContentWidth()/2),(this->m_mainLayer->getContentHeight()/2)-10.f});
+	this->m_mainLayer->addChild(image);
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id) {
 	auto ret = new ThumbnailPopup();
+	ret->levelID = id;
 	if (ret && ret->initAnchored(420, 240, -1, "GJ_square01.png")) {
-		ret->levelID = id;
 		ret->autorelease();
 		return ret;
 	}
