@@ -1,12 +1,19 @@
 {
 	"geode": "2.0.0-beta.21",
 	"gd": { "win": "2.204", "android": "2.205" },
-	"version": "v1.0.1",
+	"version": "v1.0.2",
 	"id": "cdc.level_thumbnails",
 	"name": "Level Thumbnails",
 	"developer": "cdc",
 	"repository": "https://github.com/cdc-sys/level-thumbs-mod",
 	"description": "Adds thumbnails to levels in search.",
+
+	"resources": {
+		"sprites": [
+			"resources/thumbnailButton.png",
+			"resources/noThumb.png"
+		]
+	},
 
 	"settings": {
 		"disableCache": {
@@ -20,6 +27,12 @@
 			"description": "Uses an alternative <cj>separator sprite</c> (streakb_01_001 instead of square02_001). This removes the <cy>rounded corners</c> with square02, but may cause issues with <cb>texture packs</c>.",
 			"type": "bool",
 			"default": false
+		},
+		"thumbnailButton": {
+			"name": "Enable Thumbnail Button",
+			"description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
+			"type": "bool",
+			"default": true
 		}
 	},
 

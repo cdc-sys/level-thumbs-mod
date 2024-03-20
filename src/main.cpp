@@ -4,7 +4,7 @@ using namespace geode::prelude;
 
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/web.hpp>
-
+#include "utils.h"
 
 class $modify(MyLevelCell, LevelCell) {
 	LoadingCircle* loadingIndicator;
@@ -19,9 +19,6 @@ class $modify(MyLevelCell, LevelCell) {
 
 	void loadCustomLevelCell() {
 		LevelCell::loadCustomLevelCell();
-		/*if (this->m_compactView){
-			return;
-		}*/
 		this->m_fields->background = getChildOfType<CCLayerColor>(this, 0);
 		this->m_fields->background->setZOrder(-2);
 		this->m_fields->separatorSprite = CCSprite::create(Mod::get()->getSettingValue<bool>("alternativeSpacer") ? "streakb_01_001.png" : "square02_001.png");
@@ -52,7 +49,6 @@ class $modify(MyLevelCell, LevelCell) {
 
 
 		this->addChild(this->m_fields->separatorSprite);
-		//this->m_fields->loadingIndicator->setPosition({(this->m_compactView ? -7.f : 50.f),-145});
 		this->m_fields->loadingIndicator->setPosition({viewButton->getPositionX() + (this->m_compactView ? -42.f : 20.f),viewButton->getPositionY() + (this->m_compactView ? 0.f : -30.f)});
 		this->m_fields->loadingIndicator->setScale(0.3f);
 		this->m_fields->loadingIndicator->show();
@@ -61,9 +57,6 @@ class $modify(MyLevelCell, LevelCell) {
 	}
 
 	void startDownload() {
-		if (this->m_fields->fetched) {
-			return;
-		}
 		auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}",(int)this->m_level->m_levelID).c_str());
 		if (txtr && !Mod::get()->getSettingValue<bool>("disableCache")) {
 			this->onDownloadFinished(CCSprite::createWithTexture(txtr));
@@ -95,29 +88,9 @@ class $modify(MyLevelCell, LevelCell) {
 		});
 	}
 
-	int getQualityMultiplier() {
-		auto scaleFactor = CCDirector::sharedDirector()->getContentScaleFactor();
-		switch((int)scaleFactor) {
-			case 1:
-				return 4;
-				break;
-			case 2:
-				return 2;
-				break;
-			case 4:
-				return 1;
-				break;
-		}
-		return 1;
-	}
-
 	void onDownloadFailed() {
 		this->m_fields->loadingIndicator->fadeAndRemove();
 		this->m_fields->separatorSprite->removeFromParent();
-		/*this->m_fields->notAvailable = CCLabelBMFont::create("N/A","goldFont.fnt");
-		this->m_fields->notAvailable->setScale(0.6f);
-		this->m_fields->notAvailable->setPosition({325,15});
-		this->addChild(m_fields->notAvailable);*/
 	}
 
 	void onDownloadFinished(CCSprite* sprite) {
@@ -128,8 +101,6 @@ class $modify(MyLevelCell, LevelCell) {
     		CCPoint(31.8f, 90),
     		CCPoint((this->m_compactView ? 220.f : 160.f), 90),
     		CCPoint((this->m_compactView ? 220.f : 160.f), 0)
-			//CCPoint(160.f, 400),
-    		//CCPoint(160.f, 0)
 		};
 
 		auto clippingNode = CCClippingNode::create();
@@ -138,15 +109,12 @@ class $modify(MyLevelCell, LevelCell) {
 		mask->drawPolygon(rectangle, 4, ccc4FFromccc3B({255, 0, 0}), 1, ccc4FFromccc3B({255, 125, 0}));
 		clippingNode->setStencil(mask);
 		clippingNode->addChild(image);
-		image->setScale((this->m_compactView ? 0.5f : 0.332f)/getQualityMultiplier());
+		image->setScale((this->m_compactView ? 0.5f : 0.332f)/levelthumbs::getQualityMultiplier());
 		image->setPosition({image->getScaledContentSize().width/2,image->getScaledContentSize().height/2 + (this->m_compactView ? -32.5f : 0.f)});
 		this->addChild(clippingNode);
-		// 205, 235
 		clippingNode->setPosition({(this->m_compactView ? 235.f : 205.f),0});
 		clippingNode->setScale((this->m_compactView ? 0.555f : 1.f));
 		clippingNode->setZOrder(-1);
-		//this->m_fields->background->setPosition({-135,0});
-		//this->m_fields->background->setSkewX(15);
 		this->m_fields->separatorSprite->setVisible(true);
 	}
 };
