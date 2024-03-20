@@ -57,7 +57,6 @@ bool ThumbnailPopup::setup(int id) {
 	else {
 		this->retain();
 		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", levelID);
-		geode::log::info("{}",URL);
 		web::AsyncWebRequest()
 			.fetch(URL)
 			.bytes()
