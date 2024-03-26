@@ -63,7 +63,7 @@ class $modify(MyLevelCell, LevelCell) {
 			return;
 		}
 		this->retain();
-		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png",(int)this->m_level->m_levelID);
+		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)this->m_level->m_levelID);
 		web::AsyncWebRequest()
 		.fetch(URL)
 		.bytes()

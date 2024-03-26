@@ -56,7 +56,7 @@ bool ThumbnailPopup::setup(int id) {
 	}
 	else {
 		this->retain();
-		std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", levelID);
+		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", levelID);
 		web::AsyncWebRequest()
 			.fetch(URL)
 			.bytes()
