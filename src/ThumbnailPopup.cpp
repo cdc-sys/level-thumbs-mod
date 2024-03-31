@@ -5,7 +5,7 @@ using namespace geode::prelude;
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include "ThumbnailPopup.hpp"
-#include "utils.h"
+#include "utils.hpp"
 void ThumbnailPopup::onDownload(CCObject*sender){
 	std::string URL = fmt::format("https://cdc-sys.github.io/level-thumbnails/thumbs/{}.png", this->levelID);
 	CCApplication::sharedApplication()->openURL(URL.c_str());

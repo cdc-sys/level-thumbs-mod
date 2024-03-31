@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "utils.hpp"
 #include <Geode/Geode.hpp>
 
 using namespace geode::prelude;

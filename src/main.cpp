@@ -4,7 +4,7 @@ using namespace geode::prelude;
 
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/web.hpp>
-#include "utils.h"
+#include "utils.hpp"
 
 class $modify(MyLevelCell, LevelCell) {
 	LoadingCircle* loadingIndicator;
