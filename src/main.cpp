@@ -71,15 +71,14 @@ class $modify(MyLevelCell, LevelCell) {
 			if (this->m_fields->fetchFailed == true) {
 				this->m_fields->fetched = true;
 			} else {
-				auto image = Ref(new CCImage());
-				image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-				std::string theKey = fmt::format("thumb-{}",(int)this->m_level->m_levelID);
-				CCTextureCache::get()->removeTextureForKey(theKey.c_str());
-				auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
-				this->onDownloadFinished(CCSprite::createWithTexture(texture));
-				this->m_fields->fetched = true;
-				image->release();
-				this->autorelease();
+				std::thread imageThread = std::thread([data,this](){
+					auto image = Ref(new CCImage());
+					image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+					geode::Loader::get()->queueInMainThread([image,this](){
+						this->imageCreationFinished(image);
+					});
+				});
+				imageThread.detach();
 			}
 		})
 		.expect([this](std::string const& error) {
@@ -87,7 +86,14 @@ class $modify(MyLevelCell, LevelCell) {
 			this->m_fields->fetchFailed = true;
 		});
 	}
-
+	void imageCreationFinished(CCImage* image){
+		std::string theKey = fmt::format("thumb-{}",(int)this->m_level->m_levelID);
+		auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
+		this->onDownloadFinished(CCSprite::createWithTexture(texture));
+		this->m_fields->fetched = true;
+		image->release();
+		this->autorelease();
+	}
 	void onDownloadFailed() {
 		this->m_fields->loadingIndicator->fadeAndRemove();
 		this->m_fields->separatorSprite->removeFromParent();

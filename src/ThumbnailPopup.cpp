@@ -65,16 +65,14 @@ bool ThumbnailPopup::setup(int id) {
 				this->fetched = true;
 			}
 			else {
-				auto image = Ref(new CCImage());
-				image->initWithImageData(const_cast<uint8_t*>(data.data()), data.size());
-				std::string theKey = fmt::format("thumb-{}", levelID);
-				CCTextureCache::get()->removeTextureForKey(theKey.c_str());
-				this->texture = CCTextureCache::get()->addUIImage(image, theKey.c_str());
-				this->loadingCircle->fadeAndRemove();
-				this->onDownloadFinished(CCSprite::createWithTexture(this->texture));
-				this->fetched = true;
-				image->release();
-				this->autorelease();
+				std::thread imageThread = std::thread([data,this](){
+					auto image = Ref(new CCImage());
+					image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+					geode::Loader::get()->queueInMainThread([image,this](){
+						this->imageCreationFinished(image);
+					});
+				});
+				imageThread.detach();
 			}
 				})
 			.expect([=, this](std::string const& error) {
@@ -87,7 +85,14 @@ bool ThumbnailPopup::setup(int id) {
 
 	return true;
 }
-
+void ThumbnailPopup::imageCreationFinished(CCImage* image){
+		std::string theKey = fmt::format("thumb-{}",(int)this->levelID);
+		auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
+		this->onDownloadFinished(CCSprite::createWithTexture(texture));
+		this->fetched = true;
+		image->release();
+		this->autorelease();
+	}
 void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
 	// thanks for fucking this up sheepdotcom
 	downloadBtn->setEnabled(true);

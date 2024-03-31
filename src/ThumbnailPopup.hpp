@@ -14,6 +14,7 @@ protected:
 
 	void onDownloadFinished(CCSprite* sprite);
 	void onDownloadFail();
+	void imageCreationFinished(CCImage* image);
 	void onDownload(CCObject*sender);
 	void openDiscordServerPopup();
 
