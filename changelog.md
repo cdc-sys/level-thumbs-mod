@@ -1,6 +1,9 @@
 # v1.0.4
+- Fixed an issue where levels in lists would show the wrong thumbnail
+
+# v1.0.4
 - Fixed some lag issues
-- Fixed the download button on the thumbnail popup taking you to a 404 page.
+- Fixed the download button on the thumbnail popup taking you to a 404 page
 
 # v1.0.3
 - Switched from GitHub Pages to rawgithubusercontent
