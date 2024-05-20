@@ -19,6 +19,7 @@ class $modify(MyLevelCell, LevelCell) {
 
 	void loadCustomLevelCell() {
 		LevelCell::loadCustomLevelCell();
+
 		this->m_fields->background = getChildOfType<CCLayerColor>(this, 0);
 		this->m_fields->background->setZOrder(-2);
 		this->m_fields->separatorSprite = CCSprite::create(Mod::get()->getSettingValue<bool>("alternativeSpacer") ? "streakb_01_001.png" : "square02_001.png");
@@ -26,6 +27,12 @@ class $modify(MyLevelCell, LevelCell) {
 		auto mainLayer = this->getChildByID("main-layer");
 		auto mainMenu = mainLayer->getChildByID("main-menu");
 		auto viewButton = mainMenu->getChildByID("view-button");
+
+		// Check if the level has been loaded (lists sometimes show the cell before the level is loaded)
+		CCMenuItemSpriteExtra* name = static_cast<CCMenuItemSpriteExtra*>(mainMenu->getChildByID("creator-name"));
+		CCLabelBMFont* nameText = static_cast<CCLabelBMFont*>(name->getChildren()->objectAtIndex(0));
+		std::string nameStr = nameText->getString();
+		if (nameStr.length() == 0) return;
 
 		this->m_fields->loadingIndicator = LoadingCircle::create();
 		this->m_fields->loadingIndicator->setParentLayer(this);

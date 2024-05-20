@@ -1,7 +1,7 @@
 {
 	"geode": "2.0.0-beta.23",
 	"gd": { "win": "2.204", "android": "2.205" },
-	"version": "v1.0.4",
+	"version": "v1.0.5",
 	"id": "cdc.level_thumbnails",
 	"name": "Level Thumbnails",
 	"developer": "cdc",
