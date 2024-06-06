@@ -7,15 +7,17 @@ using namespace geode::prelude;
 #include "utils.hpp"
 
 class $modify(MyLevelCell, LevelCell) {
-	LoadingCircle* loadingIndicator;
-	CCSprite* placeholderImage;
-	CCSprite* separatorSprite;
-	CCLabelBMFont* notAvailable;
-	CCLayerColor* background;
-	web::AsyncWebRequest downloadRequest;
+	struct Fields{
+		LoadingCircle* loadingIndicator;
+		CCSprite* placeholderImage;
+		CCSprite* separatorSprite;
+		CCLabelBMFont* notAvailable;
+		CCLayerColor* background;
+		web::AsyncWebRequest downloadRequest;
 
-	bool fetched = false;
-	bool fetchFailed = false;
+		bool fetched = false;
+		bool fetchFailed = false;
+	};
 
 	void loadCustomLevelCell() {
 		LevelCell::loadCustomLevelCell();
