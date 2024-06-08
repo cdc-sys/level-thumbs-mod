@@ -55,32 +55,29 @@ bool ThumbnailPopup::setup(int id) {
 		this->onDownloadFinished(CCSprite::createWithTexture(txtr));
 	}
 	else {
-		this->retain();
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", levelID);
-		web::AsyncWebRequest()
-			.fetch(URL)
-			.bytes()
-			.then([=, this](geode::ByteVector const& data) {
-			if (this->fetchFailed == true) {
-				this->fetched = true;
-			}
-			else {
-				std::thread imageThread = std::thread([data,this](){
-					auto image = Ref(new CCImage());
-					image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-					geode::Loader::get()->queueInMainThread([image,this](){
-						this->imageCreationFinished(image);
-					});
-				});
-				imageThread.detach();
-			}
-				})
-			.expect([=, this](std::string const& error) {
-					this->openDiscordServerPopup();
-					this->loadingCircle->fadeAndRemove();
+		auto req = web::WebRequest();
+		this->downloadListener.bind([this](web::WebTask::Event* e){
+			if (auto res = e->getValue()){
+				if (!res->ok()) {
 					this->onDownloadFail();
-					this->fetchFailed = true;
-				});
+					fetchFailed = true;
+				} else {
+					auto data = res->data();
+					std::thread imageThread = std::thread([data,this](){
+						auto image = Ref(new CCImage());
+						image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+						geode::Loader::get()->queueInMainThread([image,this](){
+							this->imageCreationFinished(image);
+						});
+					});
+					this->loadingCircle->fadeAndRemove();
+				imageThread.detach();
+				}
+			}
+		});
+		auto downloadTask = req.get(URL);
+		this->downloadListener.setFilter(downloadTask);
 	}
 
 	return true;

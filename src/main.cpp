@@ -1,4 +1,5 @@
 #include <Geode/Geode.hpp>
+#include <variant>
 
 using namespace geode::prelude;
 
@@ -13,7 +14,7 @@ class $modify(MyLevelCell, LevelCell) {
 		CCSprite* separatorSprite;
 		CCLabelBMFont* notAvailable;
 		CCLayerColor* background;
-		web::AsyncWebRequest downloadRequest;
+		EventListener<web::WebTask> downloadListener;
 
 		bool fetched = false;
 		bool fetchFailed = false;
@@ -64,29 +65,45 @@ class $modify(MyLevelCell, LevelCell) {
 			this->onDownloadFinished(CCSprite::createWithTexture(txtr));
 			return;
 		}
-		this->retain();
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)this->m_level->m_levelID);
-		web::AsyncWebRequest()
-		.fetch(URL)
-		.bytes()
-		.then([this](geode::ByteVector const& data) {
-			if (this->m_fields->fetchFailed == true) {
-				this->m_fields->fetched = true;
-			} else {
-				std::thread imageThread = std::thread([data,this](){
-					auto image = Ref(new CCImage());
-					image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-					geode::Loader::get()->queueInMainThread([image,this](){
-						this->imageCreationFinished(image);
+
+		auto downloadProgressText = CCLabelBMFont::create("0%","bigFont.fnt");
+		downloadProgressText->setPosition({50,50});
+		this->addChild(downloadProgressText);
+
+		auto req = web::WebRequest();
+		m_fields->downloadListener.bind([this,downloadProgressText](web::WebTask::Event* e){
+			if (auto res = e->getValue()){
+				if (!res->ok()) {
+					this->onDownloadFailed();
+					this->m_fields->fetchFailed = true;
+				} else {
+					downloadProgressText->removeFromParent();
+					auto data = res->data();
+					std::thread imageThread = std::thread([data,this](){
+						auto image = Ref(new CCImage());
+						image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+						geode::Loader::get()->queueInMainThread([image,this](){
+							this->imageCreationFinished(image);
+						});
 					});
-				});
 				imageThread.detach();
+				}
+			} else if (e->isCancelled()){
+				geode::log::warn("Exited before letting it finish fuck you");
+			} else if (e->getProgress()){
+				if (!e->getProgress()->downloadProgress().has_value()){
+					return;
+				}
+				geode::log::info("{}",e->getProgress()->downloadProgress());
+				downloadProgressText->setString(fmt::format("{}%",round(e->getProgress()->downloadProgress().value())).c_str());
 			}
-		})
-		.expect([this](std::string const& error) {
-			this->onDownloadFailed();
-			this->m_fields->fetchFailed = true;
 		});
+		auto downloadTask = req.get(URL);
+		m_fields->downloadListener.setFilter(downloadTask);
+	}
+	void destructor(){
+		geode::log::info("destructor");
 	}
 	void imageCreationFinished(CCImage* image){
 		std::string theKey = fmt::format("thumb-{}",(int)this->m_level->m_levelID);
