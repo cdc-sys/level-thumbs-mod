@@ -1,5 +1,5 @@
 {
-	"geode": "3.0.0-alpha.1",
+	"geode": "3.0.0",
 	"gd": { "win": "2.206", "android": "2.206" },
 	"version": "v1.0.4",
 	"id": "cdc.level_thumbnails",
@@ -33,6 +33,12 @@
 			"description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
 			"type": "bool",
 			"default": true
+		},
+		"progressLabel": {
+			"name": "Progress Label",
+			"description": "Toggle on/off the <cj>Progress Label</c> while downloading a thumbnail.",
+			"type": "bool",
+			"default": false
 		}
 	},
 
