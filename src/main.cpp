@@ -68,19 +68,21 @@ class $modify(MyLevelCell, LevelCell) {
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)this->m_level->m_levelID);
 
 		auto downloadProgressText = CCLabelBMFont::create("0%","bigFont.fnt");
-		downloadProgressText->setPosition({50,50});
+		downloadProgressText->setPosition({330, 12});
+		downloadProgressText->setScale(0.45f);
 		this->addChild(downloadProgressText);
 
 		auto req = web::WebRequest();
-		m_fields->downloadListener.bind([this,downloadProgressText](web::WebTask::Event* e){
-			if (auto res = e->getValue()){
+		m_fields->downloadListener.bind([this,downloadProgressText](web::WebTask::Event* e) {
+			if (auto res = e->getValue()) {
 				if (!res->ok()) {
+					downloadProgressText->removeFromParent();
 					this->onDownloadFailed();
 					this->m_fields->fetchFailed = true;
 				} else {
 					downloadProgressText->removeFromParent();
 					auto data = res->data();
-					std::thread imageThread = std::thread([data,this](){
+					std::thread imageThread = std::thread([data,this]() {
 						auto image = Ref(new CCImage());
 						image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
 						geode::Loader::get()->queueInMainThread([image,this](){
@@ -89,10 +91,10 @@ class $modify(MyLevelCell, LevelCell) {
 					});
 				imageThread.detach();
 				}
-			} else if (e->isCancelled()){
+			} else if (e->isCancelled()) {
 				geode::log::warn("Exited before letting it finish fuck you");
-			} else if (e->getProgress()){
-				if (!e->getProgress()->downloadProgress().has_value()){
+			} else if (e->getProgress()) {
+				if (!e->getProgress()->downloadProgress().has_value()) {
 					return;
 				}
 				geode::log::info("{}",e->getProgress()->downloadProgress());
