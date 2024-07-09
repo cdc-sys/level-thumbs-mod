@@ -16,12 +16,6 @@
 	},
 
 	"settings": {
-		"disableCache": {
-			"name": "Disable Cache",
-			"description": "Disables the <cj>cache</c>.\nMakes updating thumbnails not require a game <cy>restart</c>.",
-			"type": "bool",
-			"default": false
-		},
 		"thumbnailButton": {
 			"name": "Enable Thumbnail Button",
 			"description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",

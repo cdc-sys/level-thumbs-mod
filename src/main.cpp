@@ -17,6 +17,7 @@ class $modify(MyLevelCell, LevelCell) {
 		Ref<CCLayerColor> m_background;
 		SEL_SCHEDULE m_parentCheck;
 		Ref<CCClippingNode> m_clippingNode;
+		Ref<CCImage> m_image;
 	};
 
 	void loadCustomLevelCell() {
@@ -71,17 +72,12 @@ class $modify(MyLevelCell, LevelCell) {
 			if(typeinfo_cast<DailyLevelNode*>(node)){
 				setDailyAttributes();
 			}
-
 			unschedule(m_fields->m_parentCheck);
 		}
 	}
 
 	void startDownload() {
-		auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}",(int)m_level->m_levelID).c_str());
-		if (txtr && !Mod::get()->getSettingValue<bool>("disableCache")) {
-			onDownloadFinished(CCSprite::createWithTexture(txtr));
-			return;
-		}
+
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)m_level->m_levelID);
 
 		auto req = web::WebRequest();
@@ -93,10 +89,11 @@ class $modify(MyLevelCell, LevelCell) {
 					m_fields->m_downloadProgressText->removeFromParent();
 					auto data = res->data();
 					std::thread imageThread = std::thread([data, this](){
-						auto image = Ref(new CCImage());
-						image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-						geode::Loader::get()->queueInMainThread([image, this](){
-							imageCreationFinished(image);
+						m_fields->m_image = new CCImage();
+						m_fields->m_image->autorelease();
+						m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+						geode::Loader::get()->queueInMainThread([this](){
+							imageCreationFinished(m_fields->m_image);
 						});
 					});
 					imageThread.detach();
@@ -114,17 +111,13 @@ class $modify(MyLevelCell, LevelCell) {
 		m_fields->m_downloadListener.setFilter(downloadTask);
 	}
 
-	void destructor(){
-		LevelCell::~LevelCell();
-		geode::log::info("destructor");
+	void imageCreationFinished(CCImage* image){
+		CCTexture2D* texture = new CCTexture2D();
+		texture->autorelease();
+		texture->initWithImage(image);
+		onDownloadFinished(CCSprite::createWithTexture(texture));
 	}
 
-	void imageCreationFinished(CCImage* image){
-		std::string theKey = fmt::format("thumb-{}",(int)m_level->m_levelID);
-		auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
-		onDownloadFinished(CCSprite::createWithTexture(texture));
-		image->release();
-	}
 	void onDownloadFailed() {
 		m_fields->m_separator->removeFromParent();
 		handleFinish();
@@ -140,7 +133,7 @@ class $modify(MyLevelCell, LevelCell) {
 
 		float imgScale = m_fields->m_background->getContentSize().height / image->getContentSize().height;
 
-		image->setScale(imgScale / levelthumbs::getQualityMultiplier());
+		image->setScale(imgScale);
 
 		float separatorXMul = 1;
 
@@ -162,7 +155,6 @@ class $modify(MyLevelCell, LevelCell) {
 		m_fields->m_separator->setSkewX(angle*2);
 		m_fields->m_separator->setContentSize(scaledImageSize);
 		m_fields->m_separator->setAnchorPoint({1, 0});
-		
 
 		m_fields->m_clippingNode->setStencil(rect);
 		m_fields->m_clippingNode->addChild(image);
@@ -210,7 +202,6 @@ class $modify(MyLevelCell, LevelCell) {
 			border->setZOrder(5);
 			border->setID("border"_spr);
 			dln->addChild(border);
-
 		}
 
 		if(CCNode* node = dln->getChildByID("crown-sprite")){
