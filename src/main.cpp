@@ -10,11 +10,11 @@ using namespace geode::prelude;
 class $modify(MyLevelCell, LevelCell) {
 	
 	struct Fields{
-		LoadingCircle* m_loadingIndicator;
-		CCLayerColor* m_separator;
-		CCLabelBMFont* m_downloadProgressText;
+		Ref<LoadingCircle> m_loadingIndicator;
+		Ref<CCLayerColor> m_separator;
+		Ref<CCLabelBMFont> m_downloadProgressText;
 		EventListener<web::WebTask> m_downloadListener;
-		CCLayerColor* m_background;
+		Ref<CCLayerColor> m_background;
 		SEL_SCHEDULE m_parentCheck;
 		Ref<CCClippingNode> m_clippingNode;
 	};
