@@ -25,12 +25,19 @@
 			"description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
 			"type": "bool",
 			"default": true
-		}
+		},
+		"cache-limit": {
+            "name": "Cache Limit",
+			"description": "The amount of thumbnails that are cached in memory (Lower this if you have a low amount of available memory).",
+            "type": "int",
+			"min": 0,
+            "default": 50
+        }
 	},
 
 	"dependencies": [{
         "id": "geode.node-ids",
         "version": ">=1.7.1",
         "importance": "required"
-  }]
+    }]
 }

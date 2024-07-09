@@ -6,6 +6,7 @@ using namespace geode::prelude;
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/web.hpp>
 #include "utils.hpp"
+#include "ImageCache.hpp"
 
 class $modify(MyLevelCell, LevelCell) {
 	
@@ -78,6 +79,12 @@ class $modify(MyLevelCell, LevelCell) {
 
 	void startDownload() {
 
+		if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", (int)m_level->m_levelID))){
+			m_fields->m_image = image;
+			imageCreationFinished(m_fields->m_image);
+			return;
+		}
+
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)m_level->m_levelID);
 
 		auto req = web::WebRequest();
@@ -93,6 +100,7 @@ class $modify(MyLevelCell, LevelCell) {
 						m_fields->m_image->autorelease();
 						m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
 						geode::Loader::get()->queueInMainThread([this](){
+							ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", (int)m_level->m_levelID));
 							imageCreationFinished(m_fields->m_image);
 						});
 					});
@@ -112,6 +120,7 @@ class $modify(MyLevelCell, LevelCell) {
 	}
 
 	void imageCreationFinished(CCImage* image){
+
 		CCTexture2D* texture = new CCTexture2D();
 		texture->autorelease();
 		texture->initWithImage(image);

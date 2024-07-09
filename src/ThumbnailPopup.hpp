@@ -6,13 +6,11 @@ using namespace geode::prelude;
 
 class ThumbnailPopup : public Popup<int> {
 protected:
-	bool fetched = false;
-	bool fetchFailed = false;
-	int levelID;
-	EventListener<web::WebTask> downloadListener;
-	LoadingCircle* loadingCircle = LoadingCircle::create();
-	CCTexture2D* texture = nullptr;
-	CCMenuItemSpriteExtra* downloadBtn;
+	int m_levelID;
+	EventListener<web::WebTask> m_downloadListener;
+	LoadingCircle* m_loadingCircle = LoadingCircle::create();
+	CCMenuItemSpriteExtra* m_downloadBtn;
+	Ref<CCImage> m_image;
 
 	bool setup(int id) override;
 	void onDownloadFinished(CCSprite* sprite);
