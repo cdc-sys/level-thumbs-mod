@@ -1,5 +1,5 @@
 {
-	"geode": "3.0.0-alpha.1",
+	"geode": "3.2.0",
 	"gd": { "win": "2.206", "android": "2.206" },
 	"version": "v1.0.4",
 	"id": "cdc.level_thumbnails",
@@ -19,12 +19,6 @@
 		"disableCache": {
 			"name": "Disable Cache",
 			"description": "Disables the <cj>cache</c>.\nMakes updating thumbnails not require a game <cy>restart</c>.",
-			"type": "bool",
-			"default": false
-		},
-		"alternativeSpacer": {
-			"name": "Use Alternative Separator",
-			"description": "Uses an alternative <cj>separator sprite</c> (streakb_01_001 instead of square02_001). This removes the <cy>rounded corners</c> with square02, but may cause issues with <cb>texture packs</c>.",
 			"type": "bool",
 			"default": false
 		},

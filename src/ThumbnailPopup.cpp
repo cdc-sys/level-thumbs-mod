@@ -6,10 +6,12 @@ using namespace geode::prelude;
 #include <Geode/utils/web.hpp>
 #include "ThumbnailPopup.hpp"
 #include "utils.hpp"
+
 void ThumbnailPopup::onDownload(CCObject*sender){
-	std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", this->levelID);
+	std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", levelID);
 	CCApplication::sharedApplication()->openURL(URL.c_str());
 }
+
 void ThumbnailPopup::openDiscordServerPopup(){
 	if (Mod::get()->getSavedValue<bool>("discord-ad-shown")){
 		return;
@@ -29,38 +31,39 @@ void ThumbnailPopup::openDiscordServerPopup(){
         }
     );
 }
+
 bool ThumbnailPopup::setup(int id) {
 	m_noElasticity = false;
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-	this->setTitle("Thumbnail");
+	setTitle("Thumbnail");
 
 	CCMenu* downloadMenu = CCMenu::create();
 	CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
 	downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite,this,menu_selector(ThumbnailPopup::onDownload));
 	downloadBtn->setEnabled(false);
 	downloadBtn->setColor({125,125,125});
-	downloadMenu->setPosition({this->m_mainLayer->getContentWidth()-28,30});
+	downloadMenu->setPosition({m_mainLayer->getContentWidth()-28,30});
 	downloadMenu->addChild(downloadBtn);
-	this->m_mainLayer->addChild(downloadMenu);
-	this->loadingCircle->setParentLayer(this->m_mainLayer);
-	this->loadingCircle->setPosition({ -70,-40 });
-	this->loadingCircle->setScale(1.f);
-	this->loadingCircle->show();
+	m_mainLayer->addChild(downloadMenu);
+	loadingCircle->setParentLayer(m_mainLayer);
+	loadingCircle->setPosition({ -70,-40 });
+	loadingCircle->setScale(1.f);
+	loadingCircle->show();
 
 	auto txtr = CCTextureCache::get()->textureForKey(fmt::format("thumb-{}", levelID).c_str());
 	
 	if (txtr && !Mod::get()->getSettingValue<bool>("disableCache")) {
-		this->loadingCircle->fadeAndRemove();
-		this->onDownloadFinished(CCSprite::createWithTexture(txtr));
+		loadingCircle->fadeAndRemove();
+		onDownloadFinished(CCSprite::createWithTexture(txtr));
 	}
 	else {
 		std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", levelID);
 		auto req = web::WebRequest();
-		this->downloadListener.bind([this](web::WebTask::Event* e){
+		downloadListener.bind([this](web::WebTask::Event* e){
 			if (auto res = e->getValue()){
 				if (!res->ok()) {
-					this->onDownloadFail();
+					onDownloadFail();
 					fetchFailed = true;
 				} else {
 					auto data = res->data();
@@ -68,43 +71,46 @@ bool ThumbnailPopup::setup(int id) {
 						auto image = Ref(new CCImage());
 						image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
 						geode::Loader::get()->queueInMainThread([image,this](){
-							this->imageCreationFinished(image);
+							imageCreationFinished(image);
 						});
 					});
-					this->loadingCircle->fadeAndRemove();
+					loadingCircle->fadeAndRemove();
 				imageThread.detach();
 				}
 			}
 		});
 		auto downloadTask = req.get(URL);
-		this->downloadListener.setFilter(downloadTask);
+		downloadListener.setFilter(downloadTask);
 	}
 
 	return true;
 }
+
 void ThumbnailPopup::imageCreationFinished(CCImage* image){
-		std::string theKey = fmt::format("thumb-{}",(int)this->levelID);
-		auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
-		this->onDownloadFinished(CCSprite::createWithTexture(texture));
-		this->fetched = true;
-		image->release();
-		this->autorelease();
-	}
+	std::string theKey = fmt::format("thumb-{}",(int)levelID);
+	auto texture = CCTextureCache::get()->addUIImage(image,theKey.c_str());
+	onDownloadFinished(CCSprite::createWithTexture(texture));
+	fetched = true;
+	image->release();
+	autorelease();
+}
+
 void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
 	// thanks for fucking this up sheepdotcom
 	downloadBtn->setEnabled(true);
 	downloadBtn->setColor({255,255,255});
 	CCSprite* image = sprite;
 	image->setScale(0.65f / levelthumbs::getQualityMultiplier());
-	image->setPosition({(this->m_mainLayer->getContentWidth()/2),(this->m_mainLayer->getContentHeight()/2)-10.f});
-	this->m_mainLayer->addChild(image);
+	image->setPosition({(m_mainLayer->getContentWidth()/2),(m_mainLayer->getContentHeight()/2)-10.f});
+	m_mainLayer->addChild(image);
 }
+
 void ThumbnailPopup::onDownloadFail() {
 	// thanks for the image cvolton ;)
 	CCSprite* image = CCSprite::create("noThumb.png"_spr);
 	image->setScale(0.65f );
-	image->setPosition({(this->m_mainLayer->getContentWidth()/2),(this->m_mainLayer->getContentHeight()/2)-10.f});
-	this->m_mainLayer->addChild(image);
+	image->setPosition({(m_mainLayer->getContentWidth()/2),(m_mainLayer->getContentHeight()/2)-10.f});
+	m_mainLayer->addChild(image);
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id) {
@@ -120,7 +126,7 @@ ThumbnailPopup* ThumbnailPopup::create(int id) {
 
 class $modify(LevelInfoLayer2, LevelInfoLayer) {
 	void onThumbnailButton(CCObject * target) {
-		int id = this->m_level->m_levelID;
+		int id = m_level->m_levelID;
 		ThumbnailPopup::create(id)->show();
 	}
 
@@ -133,7 +139,7 @@ class $modify(LevelInfoLayer2, LevelInfoLayer) {
 		);
 		button->setID("thumbnail-button");
 
-		if (auto menu = this->getChildByID("left-side-menu")) {
+		if (auto menu = getChildByID("left-side-menu")) {
 			if (Mod::get()->getSettingValue<bool>("thumbnailButton")) {
 				menu->addChild(button);
 				menu->updateLayout();
