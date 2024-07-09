@@ -1,41 +1,41 @@
 {
-	"geode": "3.2.0",
-	"gd": { 
-		"win": "2.206", 
-		"android": "2.206",
-		"mac": "2.206"
-	},
-	"version": "v1.0.4",
-	"id": "cdc.level_thumbnails",
-	"name": "Level Thumbnails",
-	"developer": "cdc",
-	"repository": "https://github.com/cdc-sys/level-thumbs-mod",
-	"description": "Adds thumbnails to levels in search.",
+    "geode": "3.2.0",
+    "gd": { 
+        "win": "2.206", 
+        "android": "2.206",
+        "mac": "2.206"
+    },
+    "version": "v1.0.4",
+    "id": "cdc.level_thumbnails",
+    "name": "Level Thumbnails",
+    "developer": "cdc",
+    "repository": "https://github.com/cdc-sys/level-thumbs-mod",
+    "description": "Adds thumbnails to levels in search.",
 
-	"resources": {
-		"sprites": [
-			"resources/thumbnailButton.png",
-			"resources/noThumb.png"
-		]
-	},
+    "resources": {
+        "sprites": [
+            "resources/thumbnailButton.png",
+            "resources/noThumb.png"
+        ]
+    },
 
-	"settings": {
-		"thumbnailButton": {
-			"name": "Enable Thumbnail Button",
-			"description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
-			"type": "bool",
-			"default": true
-		},
-		"cache-limit": {
+    "settings": {
+        "thumbnailButton": {
+            "name": "Enable Thumbnail Button",
+            "description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
+            "type": "bool",
+            "default": true
+        },
+        "cache-limit": {
             "name": "Cache Limit",
-			"description": "The amount of thumbnails that are cached in memory (Lower this if you have a low amount of available memory).",
+            "description": "The amount of thumbnails that are cached in memory (Lower this if you have a low amount of available memory).",
             "type": "int",
-			"min": 0,
+            "min": 0,
             "default": 50
         }
-	},
+    },
 
-	"dependencies": [{
+    "dependencies": [{
         "id": "geode.node-ids",
         "version": ">=1.7.1",
         "importance": "required"

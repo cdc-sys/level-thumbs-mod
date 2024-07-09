@@ -4,6 +4,6 @@
 using namespace geode::prelude;
 
 int levelthumbs::getQualityMultiplier(){
-	return 4 / CCDirector::sharedDirector()->getContentScaleFactor();
+    return 4 / CCDirector::sharedDirector()->getContentScaleFactor();
 }
 
