@@ -8,4 +8,4 @@
 
 - Logo by [BriftXD [Twitter]](https://twitter.com/BriftXD)
 - Placeholder on the Thumbnail popup by [Cvolton](https://twitter.com/Misabr0penguin)
-- Thanks to [Alphalaneous](https://github.com/Alphalaneous) for fixing a lot of my bullshit code :3
+- Thanks to [Alphalaneous](https://github.com/Alphalaneous) for fixing a lot of my bad code :3
