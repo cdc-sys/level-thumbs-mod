@@ -1,3 +1,6 @@
+# v1.0.6
+- Removed a swear word from `about.md`
+
 # v1.0.5
 - Many fixes
 
