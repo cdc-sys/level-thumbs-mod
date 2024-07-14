@@ -32,6 +32,12 @@
             "type": "int",
             "min": 0,
             "default": 50
+        },
+        "indexURL": {
+            "name": "Index URL",
+            "description": "Change the <cj>URL</c> where the thumbnails are stored (Use for GDPS, edit the link with Mega Hack or in the settings.json).",
+            "type": "string",
+            "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
         }
     },
 

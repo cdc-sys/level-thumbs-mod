@@ -85,7 +85,7 @@ class $modify(MyLevelCell, LevelCell) {
             return;
         }
 
-        std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}.png", Mod::get()->getSettingValue<std::string>("indexURL"), (int)m_level->m_levelID);
 
         auto req = web::WebRequest();
         m_fields->m_downloadListener.bind([this](web::WebTask::Event* e){
