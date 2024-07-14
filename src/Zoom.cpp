@@ -1,4 +1,7 @@
 #include "Zoom.hpp"
+
+#ifdef GEODE_IS_WINDOWS
+
 #include <Geode/modify/CCMouseDispatcher.hpp>
 #include <Geode/modify/CCEGLView.hpp>
 #include <Geode/modify/CCScheduler.hpp>
@@ -141,3 +144,5 @@ class $modify(CCEGLView) {
         CCEGLView::onGLFWMouseCallBack(window, button, action, mods);
     }
 };
+
+#endif
