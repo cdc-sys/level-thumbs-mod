@@ -68,6 +68,10 @@ bool ThumbnailPopup::setup(int id) {
     recenterBtn->setPosition({5, 5});
     m_buttonMenu->addChild(recenterBtn);
 
+    #ifndef GEODE_IS_WINDOWS
+        recenterBtn->setVisible(false);
+    #endif
+
     ButtonSprite* infoSprite = ButtonSprite::create("More Info");
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
 
