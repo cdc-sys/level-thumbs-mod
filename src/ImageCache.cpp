@@ -11,6 +11,8 @@ ImageCache::ImageCache(){
 
 void ImageCache::addImage(CCImage* image, std::string key){
 
+    if(!image) return;
+
     if(m_imageDict->count() >= Mod::get()->getSettingValue<int64_t>("cache-limit")){
         m_imageDict->removeObjectForKey(static_cast<CCString*>(m_imageDict->allKeys()->objectAtIndex(0))->getCString());
     }

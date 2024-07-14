@@ -7,6 +7,7 @@ using namespace geode::prelude;
 #include <Geode/utils/web.hpp>
 #include "utils.hpp"
 #include "ImageCache.hpp"
+#include "Zoom.hpp"
 
 class $modify(MyLevelCell, LevelCell) {
     
@@ -19,6 +20,7 @@ class $modify(MyLevelCell, LevelCell) {
         SEL_SCHEDULE m_parentCheck;
         Ref<CCClippingNode> m_clippingNode;
         Ref<CCImage> m_image;
+        std::mutex m;
     };
 
     void loadCustomLevelCell() {
@@ -86,23 +88,27 @@ class $modify(MyLevelCell, LevelCell) {
         }
 
         std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png",(int)m_level->m_levelID);
+        int id = m_level->m_levelID.value();
 
         auto req = web::WebRequest();
-        m_fields->m_downloadListener.bind([this](web::WebTask::Event* e){
+        m_fields->m_downloadListener.bind([id, this](web::WebTask::Event* e){
             if (auto res = e->getValue()){
                 if (!res->ok()) {
                     onDownloadFailed();
                 } else {
                     m_fields->m_downloadProgressText->removeFromParent();
                     auto data = res->data();
-                    std::thread imageThread = std::thread([data, this](){
+                    
+                    std::thread imageThread = std::thread([data, id, this](){
+                        m_fields->m.lock();
                         m_fields->m_image = new CCImage();
-                        m_fields->m_image->autorelease();
                         m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
-                        geode::Loader::get()->queueInMainThread([this](){
-                            ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", (int)m_level->m_levelID));
+                        geode::Loader::get()->queueInMainThread([data, id, this](){
+                            ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", id));
+                            m_fields->m_image->release();
                             imageCreationFinished(m_fields->m_image);
                         });
+                        m_fields->m.unlock();
                     });
                     imageThread.detach();
                 }
@@ -114,6 +120,7 @@ class $modify(MyLevelCell, LevelCell) {
             } else if (e->isCancelled()){
                 geode::log::warn("Exited before finishing");
             } 
+            
         });
         auto downloadTask = req.get(URL);
         m_fields->m_downloadListener.setFilter(downloadTask);
@@ -122,9 +129,9 @@ class $modify(MyLevelCell, LevelCell) {
     void imageCreationFinished(CCImage* image){
 
         CCTexture2D* texture = new CCTexture2D();
-        texture->autorelease();
         texture->initWithImage(image);
         onDownloadFinished(CCSprite::createWithTexture(texture));
+        texture->release();
     }
 
     void onDownloadFailed() {
