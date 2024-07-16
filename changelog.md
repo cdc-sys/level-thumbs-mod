@@ -1,3 +1,9 @@
+# v1.0.6
+- Removed a swear word from `about.md`
+
+# v1.0.5
+- Many fixes
+
 # v1.0.4
 - Fixed some lag issues
 - Fixed the download button on the thumbnail popup taking you to a 404 page.
