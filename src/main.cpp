@@ -209,8 +209,10 @@ class $modify(MyLevelCell, LevelCell) {
             border->setPosition(bg->getPosition());
             border->setColor(bg->getColor());
             border->setZOrder(5);
-            border->setID("border"_spr);
-            dln->addChild(border);
+            if (!dln->getChildByID("border"_spr)) {
+                border->setID("border"_spr);
+                dln->addChild(border);
+            } // nullptr check cause ksjajskldjlkZJlkJKLHDKJHKJDHKJDHFLKJSLKJFLKDJFLKJDLKGFUYDCIU
         }
 
         if(CCNode* node = dln->getChildByID("crown-sprite")){
