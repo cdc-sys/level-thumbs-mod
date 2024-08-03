@@ -27,7 +27,6 @@ class $modify(MenuLayer){
             Mod::get()->setSavedValue<bool>("temp_newServerNotifOpened",true);
         },false);
         flalert->m_scene = this;
-        flalert->changeWidth(600);
         flalert->show();
         return true;
     }
