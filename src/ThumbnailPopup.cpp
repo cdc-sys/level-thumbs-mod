@@ -8,22 +8,17 @@ using namespace geode::prelude;
 #include "utils.hpp"
 #include "ImageCache.hpp"
 
-void ThumbnailPopup::onDownload(CCObject*sender){
+void ThumbnailPopup::onDownload(CCObject* sender){
     std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
     CCApplication::sharedApplication()->openURL(URL.c_str());
 }
 
-void ThumbnailPopup::openDiscordServerPopup(){
-    if (Mod::get()->getSavedValue<bool>("discord-ad-shown")){
-        return;
-    }
-    else{
-        Mod::get()->setSavedValue<bool>("discord-ad-shown",true);
-    }
+void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
+    
     createQuickPopup(
         "Uh Oh!",
         "Hm.. This level seems to not have a <cj>Thumbnail</c>...\n"
-        "Worry not! You can join our <cg>Discord Server</c> and submit a thumbnail <cy>YOURSELF!</c>\n<cb>(Don't worry, you can always find the server link in the mod about page..)</c>",
+        "Worry not! You can join our <cg>Discord Server</c> and submit a thumbnail <cy>YOURSELF!</c>",
         "No Thanks", "JOIN!",
         [this](auto, bool btn2) {
             if (btn2) {
@@ -36,17 +31,63 @@ void ThumbnailPopup::openDiscordServerPopup(){
 bool ThumbnailPopup::setup(int id) {
     m_noElasticity = false;
     auto winSize = CCDirector::sharedDirector()->getWinSize();
+    setID("ThumbnailPopup");
+    setTitle("");
 
-    setTitle("Thumbnail");
+    CCScale9Sprite* border = CCScale9Sprite::create("GJ_square07.png");
+    border->setContentSize(m_bgSprite->getContentSize());
+    border->setPosition(m_bgSprite->getPosition());
+    border->setZOrder(2);
 
-    CCMenu* downloadMenu = CCMenu::create();
+    CCLayerColor* mask = CCLayerColor::create({255, 255, 255});
+    mask->setContentSize({391, 220});
+    mask->setPosition({m_bgSprite->getContentSize().width / 2 - 391/2, m_bgSprite->getContentSize().height/2 - 220/2});
+
+    m_bgSprite->setColor({50,50,50});
+
+    m_clippingNode = CCClippingNode::create();
+    m_clippingNode->setContentSize(m_bgSprite->getContentSize());
+    m_clippingNode->setStencil(mask);
+    m_clippingNode->setZOrder(1);
+
+    m_mainLayer->addChild(border);
+    m_mainLayer->addChild(m_clippingNode);
+
     CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
-    m_downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite,this,menu_selector(ThumbnailPopup::onDownload));
+    m_downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite, this, menu_selector(ThumbnailPopup::onDownload));
     m_downloadBtn->setEnabled(false);
     m_downloadBtn->setColor({125,125,125});
-    downloadMenu->setPosition({m_mainLayer->getContentWidth()-28,30});
-    downloadMenu->addChild(m_downloadBtn);
-    m_mainLayer->addChild(downloadMenu);
+   
+    m_downloadBtn->setPosition({m_mainLayer->getContentSize().width - 5, 5});
+
+    m_buttonMenu->addChild(m_downloadBtn);
+
+    CCSprite* recenterSprite = CCSprite::createWithSpriteFrameName("GJ_undoBtn_001.png");
+    CCMenuItemSpriteExtra* recenterBtn = CCMenuItemSpriteExtra::create(recenterSprite, this, menu_selector(ThumbnailPopup::recenter));
+
+    recenterBtn->setPosition({5, 5});
+    m_buttonMenu->addChild(recenterBtn);
+
+    #ifndef GEODE_IS_WINDOWS
+        recenterBtn->setVisible(false);
+    #endif
+
+    ButtonSprite* infoSprite = ButtonSprite::create("More Info");
+    m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
+
+    m_infoBtn->setPosition({m_mainLayer->getContentSize().width/2, 6});
+    m_infoBtn->setVisible(false);
+    m_infoBtn->setZOrder(3);
+
+    m_buttonMenu->addChild(m_infoBtn);
+
+    m_theFunny = CCLabelBMFont::create("Hey there! OwO", "bigFont.fnt");
+    m_theFunny->setPosition(m_bgSprite->getPosition());
+    m_theFunny->setVisible(false);
+    m_theFunny->setScale(0.25f);
+
+    m_mainLayer->addChild(m_theFunny);
+
     m_loadingCircle->setParentLayer(m_mainLayer);
     m_loadingCircle->setPosition({ -70,-40 });
     m_loadingCircle->setScale(1.f);
@@ -77,7 +118,6 @@ bool ThumbnailPopup::setup(int id) {
                         imageCreationFinished(m_image);
                     });
                 });
-                m_loadingCircle->fadeAndRemove();
                 imageThread.detach();
             }
         }
@@ -96,28 +136,52 @@ void ThumbnailPopup::imageCreationFinished(CCImage* image){
     onDownloadFinished(CCSprite::createWithTexture(texture));
 }
 
-void ThumbnailPopup::onDownloadFinished(CCSprite* sprite) {
+void ThumbnailPopup::recenter(CCObject* sender){
+
+    if(CCNode* node = m_clippingNode->getChildByID("thumbnail")) {
+        node->setPosition({m_mainLayer->getContentWidth()/2,m_mainLayer->getContentHeight()/2});
+        node->stopAllActions();
+        float scale = m_maxHeight/node->getContentSize().height;
+        node->setUserObject("new-scale", CCFloat::create(scale));
+        node->setScale(scale);
+    }
+}
+
+void ThumbnailPopup::onDownloadFinished(CCSprite* image) {
     // thanks for fucking this up sheepdotcom
     m_downloadBtn->setEnabled(true);
     m_downloadBtn->setColor({255,255,255});
-    CCSprite* image = sprite;
-    image->setScale(0.65f / levelthumbs::getQualityMultiplier());
-    image->setPosition({(m_mainLayer->getContentWidth()/2),(m_mainLayer->getContentHeight()/2)-10.f});
-    m_mainLayer->addChild(image);
+
+    float scale = m_maxHeight/image->getContentSize().height;
+    image->setScale(scale);
+    image->setUserObject("scale", CCFloat::create(scale));
+    image->setPosition({m_mainLayer->getContentWidth()/2,m_mainLayer->getContentHeight()/2});
+
+    image->setID("thumbnail");
+    m_clippingNode->addChild(image);
+    m_loadingCircle->fadeAndRemove();
 }
 
 void ThumbnailPopup::onDownloadFail() {
     // thanks for the image cvolton ;)
     CCSprite* image = CCSprite::create("noThumb.png"_spr);
-    image->setScale(0.65f );
-    image->setPosition({(m_mainLayer->getContentWidth()/2),(m_mainLayer->getContentHeight()/2)-10.f});
-    m_mainLayer->addChild(image);
+    float scale = m_maxHeight/image->getContentSize().height;
+    image->setScale(scale);
+    image->setUserObject("scale", CCFloat::create(scale));
+    image->setPosition({m_mainLayer->getContentWidth()/2, m_mainLayer->getContentHeight()/2});
+    image->setID("thumbnail");
+
+    m_infoBtn->setVisible(true);
+    m_theFunny->setVisible(true);
+    m_clippingNode->addChild(image);
+    m_loadingCircle->fadeAndRemove();
+
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id) {
     auto ret = new ThumbnailPopup();
     ret->m_levelID = id;
-    if (ret && ret->initAnchored(420, 240, -1, "GJ_square01.png")) {
+    if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
         return ret;
     }
