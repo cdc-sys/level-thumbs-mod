@@ -1,3 +1,8 @@
+# v1.0.7
+- Buggy zooming and thumbnail popup bugfixes
+- Crash fixes
+- Popup
+
 # v1.0.6
 - Removed a swear word from `about.md`
 
