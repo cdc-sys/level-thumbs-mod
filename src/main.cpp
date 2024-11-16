@@ -47,7 +47,7 @@ class $modify(MyLevelCell, LevelCell) {
 
     void loadCustomLevelCell() {
         LevelCell::loadCustomLevelCell();
-        if(CCLayerColor* bg = getChildOfType<CCLayerColor>(this, 0)){
+        if(CCLayerColor* bg = this->getChildByType<CCLayerColor>(0)){
             m_fields->m_background = bg;
             bg->setZOrder(-2);
         }
