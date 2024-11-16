@@ -29,7 +29,7 @@ void Zoom::doZoom(float y){
     CCNode* thumbnailPopup = CCScene::get()->getChildByID("ThumbnailPopup");
     if (!thumbnailPopup) return;
 
-    CCLayer* popupLayer = getChildOfType<CCLayer>(thumbnailPopup, 0);
+    CCLayer* popupLayer = thumbnailPopup->getChildByType<CCLayer>(0);
     if(!popupLayer) return;
 
     CCNode* thumbnail = thumbnailPopup->getChildByIDRecursive("thumbnail");
@@ -82,7 +82,7 @@ void Zoom::update(float dt){
     CCNode* thumbnailPopup = CCScene::get()->getChildByID("ThumbnailPopup");
     if (!thumbnailPopup) return;
 
-    CCLayer* popupLayer = getChildOfType<CCLayer>(thumbnailPopup, 0);
+    CCLayer* popupLayer = thumbnailPopup->getChildByType<CCLayer>(0);
     if(!popupLayer) return;
 
     CCNode* thumbnail = thumbnailPopup->getChildByIDRecursive("thumbnail");
