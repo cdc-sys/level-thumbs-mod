@@ -9,28 +9,6 @@ using namespace geode::prelude;
 #include "utils.hpp"
 #include "ImageCache.hpp"
 #include "Zoom.hpp"
-class $modify(MenuLayer){
-    bool init(){
-        MenuLayer::init();
-        if (Mod::get()->getSavedValue<bool>("temp_newServerNotifOpened")){
-            return true;
-        }
-        auto flalert = createQuickPopup(
-        "Update!",
-        "The <cj>Thumbnails</c> mod has a new <cb>Discord</c> now!\n"
-        "Wanna <cg>join</c> to submit <cy>Thumbnails</c> and <cg>more</c>?",
-        "No Thanks", "JOIN!",
-        [this](auto, bool btn2) {
-            if (btn2) {
-                CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
-            }
-            Mod::get()->setSavedValue<bool>("temp_newServerNotifOpened",true);
-        },false);
-        flalert->m_scene = this;
-        flalert->show();
-        return true;
-    }
-};
 class $modify(MyLevelCell, LevelCell) {
     
     struct Fields{
