@@ -10,7 +10,7 @@
     "name": "Level Thumbnails",
     "developer": "cdc",
     "links":{
-        "community": "",
+        "community": "https://discord.gg/GuagJDsqds",
         "source": "https://github.com/cdc-sys/level-thumbs-mod"
     },
     "description": "Adds thumbnails to levels in search.",
@@ -56,4 +56,5 @@
         "version": ">=1.7.1",
         "importance": "required"
     }]
+    
 }
