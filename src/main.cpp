@@ -25,6 +25,7 @@ class $modify(MyLevelCell, LevelCell) {
 
     void loadCustomLevelCell() {
         LevelCell::loadCustomLevelCell();
+        if (Mod::get()->getSettingValue<bool>("lists-limit-enabled") && this->m_level->m_listPosition > Mod::get()->getSettingValue<int64_t>("level-lists-limit")) return;
         if(CCLayerColor* bg = this->getChildByType<CCLayerColor>(0)){
             m_fields->m_background = bg;
             bg->setZOrder(-2);

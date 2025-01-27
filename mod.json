@@ -32,6 +32,19 @@
             "type": "int",
             "min": 0,
             "default": 50
+        },
+        "lists-limit-enabled":{
+            "name":"Enable Thumbnail Limit In Lists",
+            "description": "Allows you to <cy>limit</c> the amount of thumbnails shown in level lists.\n<cy>Enable this setting if you experience lag when loading larger lists.</c>",
+            "type":"bool",
+            "default":false
+        },
+        "level-lists-limit":{
+            "name":"Limit",
+            "description":"Thumbnails won't be shown past the level with the limit as it's place in the list.",
+            "type":"int",
+            "default":5,
+            "enable-if": "lists-limit-enabled"
         }
     },
 

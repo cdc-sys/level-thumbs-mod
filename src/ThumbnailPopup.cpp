@@ -72,7 +72,7 @@ bool ThumbnailPopup::setup(int id) {
         recenterBtn->setVisible(false);
     #endif
 
-    ButtonSprite* infoSprite = ButtonSprite::create("More Info");
+    ButtonSprite* infoSprite = ButtonSprite::create("What's this?");
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
 
     m_infoBtn->setPosition({m_mainLayer->getContentSize().width/2, 6});
@@ -81,7 +81,7 @@ bool ThumbnailPopup::setup(int id) {
 
     m_buttonMenu->addChild(m_infoBtn);
 
-    m_theFunny = CCLabelBMFont::create("Hey there! OwO", "bigFont.fnt");
+    m_theFunny = CCLabelBMFont::create("OwO", "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
     m_theFunny->setVisible(false);
     m_theFunny->setScale(0.25f);
