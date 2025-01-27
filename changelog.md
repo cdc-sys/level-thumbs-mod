@@ -1,3 +1,8 @@
+# v1.0.9
+- Add thumbnail limit in lists toggle
+- Tweak the easter egg :3
+- Add links to the geode mod popup (discord, source)
+
 # v1.0.7
 - Buggy zooming and thumbnail popup bugfixes
 - Crash fixes
