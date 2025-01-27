@@ -5,11 +5,14 @@
         "android": "2.2074",
         "mac": "2.2074"
     },
-    "version": "v1.0.8",
+    "version": "v1.0.9",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
-    "repository": "https://github.com/cdc-sys/level-thumbs-mod",
+    "links":{
+        "community": "",
+        "source": "https://github.com/cdc-sys/level-thumbs-mod"
+    },
     "description": "Adds thumbnails to levels in search.",
 
     "resources": {
