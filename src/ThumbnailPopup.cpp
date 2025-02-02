@@ -68,7 +68,9 @@ bool ThumbnailPopup::setup(int id) {
     recenterBtn->setPosition({5, 5});
     m_buttonMenu->addChild(recenterBtn);
 
+    #ifdef GEODE_IS_MACOS
     recenterBtn->setVisible(false);
+    #endif
 
     ButtonSprite* infoSprite = ButtonSprite::create("What's this?");
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
@@ -144,6 +146,7 @@ void ThumbnailPopup::recenter(CCObject* sender){
         float scale = m_maxHeight/node->getContentSize().height;
         node->setUserObject("new-scale", CCFloat::create(scale));
         node->setScale(scale);
+        node->setAnchorPoint({0.5,0.5});
     }
 }
 

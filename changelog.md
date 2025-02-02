@@ -1,3 +1,6 @@
+# v1.1.1
+- Fix recenter button being hidden on all platforms
+
 # v1.1.0
 - Port zooming to android, worth a minor update IMO
 
