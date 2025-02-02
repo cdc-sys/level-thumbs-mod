@@ -12,13 +12,18 @@ using namespace geode::prelude;
 #include "Zoom.hpp"
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
+        // fit any aspect ratio into the 1920x1080 rendertexture
         CCScene::get()->setAnchorPoint({0,0});
-        CCScene::get()->setScale((1080/CCScene::get()->getContentHeight())/CCDirector::get()->getContentScaleFactor());
-        geode::log::info("{}",CCScene::get()->getScale());
+
+        auto sceneContentSize = CCScene::get()->getContentSize();
+        auto scaleFactor = CCDirector::get()->getContentScaleFactor();
+        CCScene::get()->setScale((1080 / sceneContentSize.height) / scaleFactor);
+
+        auto sceneScaledContentSize = CCScene::get()->getScaledContentSize();
         CCScene::get()->setPosition(
-        ((1920-(CCScene::get()->getScaledContentWidth()*CCDirector::get()->getContentScaleFactor()))/2/CCDirector::get()->getContentScaleFactor())
-            ,0.f
-            );
+            ((1920 - (sceneScaledContentSize.width * scaleFactor))/2/scaleFactor), 0.f
+        );
+
         PlayLayer::get()->getChildByType<UILayer>(0)->setVisible(false);
 
 		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
@@ -31,6 +36,7 @@ class $modify(MyPauseLayer,PauseLayer){
 		}
     }
     void show(){
+        // reset the previous scene tomfoolery
         CCScene::get()->setScale(1.0f);
         CCScene::get()->setPosition(0,0);
         PlayLayer::get()->getChildByType<UILayer>(0)->setVisible(true);
@@ -46,17 +52,21 @@ class $modify(MyPauseLayer,PauseLayer){
     }
     void customSetup() {
         PauseLayer::customSetup();
-        geode::log::info("rendering screenshot");
+
         CCDirector* director = CCDirector::sharedDirector();
         CCScene* scene = CCScene::get();
-		CCRenderTexture* renderTexture = CCRenderTexture::create(1920/CCDirector::get()->getContentScaleFactor(), 1080/CCDirector::get()->getContentScaleFactor());
+        auto scaleFactor = CCDirector::get()->getContentScaleFactor();
+
+		CCRenderTexture* renderTexture = CCRenderTexture::create(1920/scaleFactor, 1080/scaleFactor);
+
         hide();
+
         renderTexture->begin();
-        geode::log::info("a");
         scene->visit();
         renderTexture->end();
+
         show();
-        geode::log::info("b");
+
         auto image = renderTexture->newCCImage();
         geode::log::info("c");
         if (image){
