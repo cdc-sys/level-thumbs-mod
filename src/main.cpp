@@ -10,6 +10,8 @@ using namespace geode::prelude;
 #include "utils.hpp"
 #include "ImageCache.hpp"
 #include "Zoom.hpp"
+
+#ifndef GEODE_IS_MACOS
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
         // fit any aspect ratio into the 1920x1080 rendertexture
@@ -76,6 +78,7 @@ class $modify(MyPauseLayer,PauseLayer){
         }
     }
 };
+#endif
 class $modify(MyLevelCell, LevelCell) {
     
     struct Fields{
