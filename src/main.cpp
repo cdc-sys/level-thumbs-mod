@@ -11,9 +11,12 @@ using namespace geode::prelude;
 #include "ImageCache.hpp"
 #include "Zoom.hpp"
 
+// thumbnail taking code + pauselayer hook
+
 #ifndef GEODE_IS_MACOS
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
+        this->setVisible(false);
         // fit any aspect ratio into the 1920x1080 rendertexture
         CCScene::get()->setAnchorPoint({0,0});
 
@@ -38,6 +41,7 @@ class $modify(MyPauseLayer,PauseLayer){
 		}
     }
     void show(){
+        this->setVisible(true);
         // reset the previous scene tomfoolery
         CCScene::get()->setScale(1.0f);
         CCScene::get()->setPosition(0,0);
@@ -52,9 +56,7 @@ class $modify(MyPauseLayer,PauseLayer){
 			}
 		}
     }
-    void customSetup() {
-        PauseLayer::customSetup();
-
+    void doScreenshot(){
         CCDirector* director = CCDirector::sharedDirector();
         CCScene* scene = CCScene::get();
         auto scaleFactor = CCDirector::get()->getContentScaleFactor();
@@ -77,8 +79,22 @@ class $modify(MyPauseLayer,PauseLayer){
             image->release();
         }
     }
+    void onScreenshot(CCObject* sender){
+        doScreenshot();
+    }
+    void customSetup() {
+        PauseLayer::customSetup();
+        auto screenshotSprite = CCSprite::createWithSpriteFrameName("edit_eCamGuideBtn_001.png");
+        auto screenshotButton = CCMenuItemSpriteExtra::create(screenshotSprite,this,menu_selector(MyPauseLayer::onScreenshot));
+        auto menu = CCMenu::create();
+        menu->addChild(screenshotButton);
+        this->addChild(menu);
+    }
 };
 #endif
+
+// level cell hook
+
 class $modify(MyLevelCell, LevelCell) {
     
     struct Fields{
