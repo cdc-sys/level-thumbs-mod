@@ -1,3 +1,6 @@
+# v1.1.0
+- Port zooming to android, worth a minor update IMO
+
 # v1.0.9
 - Add thumbnail limit in lists toggle
 - Tweak the easter egg :3
