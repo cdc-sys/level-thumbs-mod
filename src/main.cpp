@@ -68,16 +68,11 @@ class $modify(MyPauseLayer,PauseLayer){
         show();
 
         auto image = renderTexture->newCCImage();
-        geode::log::info("c");
+
         if (image){
-            geode::log::info("saving to {}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID);
             const char* path = fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID).c_str();
             image->saveToFile(path);
-            geode::log::info("saved");
             image->release();
-        }
-        else{
-            geode::log::info("image is null :(");
         }
     }
 };
