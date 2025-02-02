@@ -5,10 +5,72 @@ using namespace geode::prelude;
 
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/PauseLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include "utils.hpp"
 #include "ImageCache.hpp"
 #include "Zoom.hpp"
+class $modify(MyPauseLayer,PauseLayer){
+    void hide(){
+        CCScene::get()->setAnchorPoint({0,0});
+        CCScene::get()->setScale((1080/CCScene::get()->getContentHeight())/CCDirector::get()->getContentScaleFactor());
+        geode::log::info("{}",CCScene::get()->getScale());
+        CCScene::get()->setPosition(
+        ((1920-(CCScene::get()->getScaledContentWidth()*CCDirector::get()->getContentScaleFactor()))/2/CCDirector::get()->getContentScaleFactor())
+            ,0.f
+            );
+        PlayLayer::get()->getChildByType<UILayer>(0)->setVisible(false);
+
+		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
+
+		for (auto* obj : objects) {
+			if (obj->getID() != "main-node")
+			{
+				obj->setPosition(obj->getPosition() + ccp(10000, 10000));
+			}
+		}
+    }
+    void show(){
+        CCScene::get()->setScale(1.0f);
+        CCScene::get()->setPosition(0,0);
+        PlayLayer::get()->getChildByType<UILayer>(0)->setVisible(true);
+
+		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
+
+		for (auto* obj : objects) {
+			if (obj->getID() != "main-node")
+			{
+				obj->setPosition(obj->getPosition() - ccp(10000, 10000));
+			}
+		}
+    }
+    void customSetup() {
+        PauseLayer::customSetup();
+        geode::log::info("rendering screenshot");
+        CCDirector* director = CCDirector::sharedDirector();
+        CCScene* scene = CCScene::get();
+		CCRenderTexture* renderTexture = CCRenderTexture::create(1920/CCDirector::get()->getContentScaleFactor(), 1080/CCDirector::get()->getContentScaleFactor());
+        hide();
+        renderTexture->begin();
+        geode::log::info("a");
+        scene->visit();
+        renderTexture->end();
+        show();
+        geode::log::info("b");
+        auto image = renderTexture->newCCImage();
+        geode::log::info("c");
+        if (image){
+            geode::log::info("saving to {}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID);
+            const char* path = fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID).c_str();
+            image->saveToFile(path);
+            geode::log::info("saved");
+            image->release();
+        }
+        else{
+            geode::log::info("image is null :(");
+        }
+    }
+};
 class $modify(MyLevelCell, LevelCell) {
     
     struct Fields{
