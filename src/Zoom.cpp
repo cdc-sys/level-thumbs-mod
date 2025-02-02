@@ -115,7 +115,7 @@ void Zoom::update(float dt){
 
 class $modify(CCScheduler) {
     virtual void update(float dt) {
-        //Zoom::get()->update(dt);
+        Zoom::get()->update(dt);
         CCScheduler::update(dt);
     }
 };
