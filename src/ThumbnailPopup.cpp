@@ -193,7 +193,7 @@ float clip(float n, float lower, float upper) {
 }
 bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
     if (m_touches.size()==1){
-        geode::log::info("this is where the second touch gets added");
+        //geode::log::info("this is where the second touch gets added");
         //thank you matcool
         auto firstTouch = *m_touches.begin();
 
@@ -217,7 +217,7 @@ bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
             thumbnail->getPositionY()+thumbnail->getScaledContentHeight()*-(oldAnchor.y-clip(newAnchorY,0,1))
         });
     }
-    geode::log::info("touch added");
+    //geode::log::info("touch added");
     m_touches.insert(pTouch);
     return true;
 }
@@ -232,7 +232,7 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
     }
     if (m_touches.size() == 2){
         this->wasZooming = true;
-        geode::log::info("double touch (EPIC!)");
+        //geode::log::info("double touch (EPIC!)");
         CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
         if(!thumbnail) return;
         //thank you matcool
@@ -249,7 +249,7 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
         auto const mult = this->m_initialDistance / distNow;
         auto zoom = clip(this->m_initialScale / mult, 0.2f,6.5f);
         thumbnail->setScale(zoom);
-        geode::log::info("zoom {}",zoom);
+        //geode::log::info("zoom {}",zoom);
 
         auto centerDiff = this->m_touchMidPoint - center;
         thumbnail->setPosition(thumbnail->getPosition() - centerDiff);
@@ -278,7 +278,7 @@ void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
         }
         wasZooming=false;
     }
-    geode::log::info("ended");
+    //geode::log::info("ended");
 }
 
 class $modify(LevelInfoLayer2, LevelInfoLayer) {
