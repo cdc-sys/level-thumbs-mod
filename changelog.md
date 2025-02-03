@@ -1,3 +1,7 @@
+# v1.2.1
+- Fix double dragging on the thumbnail popup (windows)
+- Add VERY EXPERIMENTAL in-game thumbnail taking.
+
 # v1.1.1
 - Fix recenter button being hidden on all platforms
 
