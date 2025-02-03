@@ -214,7 +214,7 @@ void ThumbnailPopup::onDownloadFail() {
 
 ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
-    ret->m_isScreenshotPreview = true;
+    ret->m_isScreenshotPreview = screenshotPreview;
     ret->m_levelID = id;
     if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
