@@ -83,8 +83,9 @@ class $modify(MyPauseLayer,PauseLayer){
         auto image = renderTexture->newCCImage();
 
         if (image){
-            const char* path = fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID).c_str();
-            image->saveToFile(path);
+            std::string path = fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID);
+            FLAlertLayer::create("path",path,"OK")->show();
+            image->saveToFile(path.c_str());
             image->release();
         }
     }
