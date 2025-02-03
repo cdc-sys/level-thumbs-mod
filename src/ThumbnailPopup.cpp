@@ -157,11 +157,10 @@ bool ThumbnailPopup::setup(int id) {
         return true;
         
     }
-    #ifndef GEODE_IS_WINDOWS
+
     this->setTouchEnabled(true);
     cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, cocos2d::kCCMenuHandlerPriority, true);
     handleTouchPriority(this);
-    #endif
 
     return true;
 }
@@ -263,12 +262,14 @@ bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
 
 void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
     //geode::log::info("moved");
+    #ifndef GEODE_IS_WINDOWS // prevent double drag on windows
     if (m_touches.size() == 1){
         //geode::log::info("single touch");
         CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
         if(!thumbnail) return;
         thumbnail->setPosition(thumbnail->getPositionX()+pTouch->getDelta().x,thumbnail->getPositionY()+pTouch->getDelta().y);
     }
+    #endif
     if (m_touches.size() == 2){
         this->wasZooming = true;
         //geode::log::info("double touch (EPIC!)");
