@@ -48,6 +48,12 @@
             "type":"int",
             "default":5,
             "enable-if": "lists-limit-enabled"
+        },
+        "enable-thumbnail-taking":{
+            "name":"In-Game Thumbnail Taking (EXPERIMENTAL)",
+            "description": "<cr>HEAVILY WIP, EXPECT ISSUES.</c>",
+            "type":"bool",
+            "default":false
         }
     },
 

@@ -14,6 +14,14 @@ using namespace geode::prelude;
 
 // thumbnail taking code + pauselayer hook
 
+int gcd (int a, int b) {
+    return (b == 0) ? a : gcd (b, a%b);
+}
+
+std::array<int,2> ratio(int a,int b){
+    return {a/gcd(a,b),b/gcd(a,b)};
+}
+
 #ifndef GEODE_IS_MACOS
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
@@ -81,16 +89,24 @@ class $modify(MyPauseLayer,PauseLayer){
         }
     }
     void onScreenshot(CCObject* sender){
+        if (PlayLayer::get()->m_shaderLayer->getParent()){
+            FLAlertLayer::create("Oops!","Taking a thumbnail while a <cy>shader</c> is present on screen is <cr>not yet supported.</c>","OK")->show();
+            return;
+        }
         doScreenshot();
         ThumbnailPopup::create((int)PlayLayer::get()->m_level->m_levelID,true)->show();
     }
     void customSetup() {
         PauseLayer::customSetup();
-        auto screenshotSprite = CCSprite::createWithSpriteFrameName("edit_eCamGuideBtn_001.png");
+        if (!Mod::get()->getSettingValue<bool>("enable-thumbnail-taking")){
+            return;
+        }
+        auto rightButtonMenu = this->getChildByID("right-button-menu");
+        auto screenshotSprite = CCSprite::create("thumbnailButton.png"_spr);
+        screenshotSprite->setScale(0.6f);
         auto screenshotButton = CCMenuItemSpriteExtra::create(screenshotSprite,this,menu_selector(MyPauseLayer::onScreenshot));
-        auto menu = CCMenu::create();
-        menu->addChild(screenshotButton);
-        this->addChild(menu);
+        rightButtonMenu->addChild(screenshotButton);
+        rightButtonMenu->updateLayout();
     }
 };
 #endif

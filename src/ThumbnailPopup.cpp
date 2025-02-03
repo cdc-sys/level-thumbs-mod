@@ -14,6 +14,8 @@ void ThumbnailPopup::onDownload(CCObject* sender){
 }
 void ThumbnailPopup::onOpenFolder(CCObject* sender){
     geode::utils::file::openFolder(Mod::get()->getSaveDir());
+    geode::utils::clipboard::write(fmt::format("{}",this->m_levelID));
+    geode::Notification::create("Copied ID to clipboard.",nullptr)->show();
 }
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
     if (m_isScreenshotPreview){
@@ -148,6 +150,7 @@ bool ThumbnailPopup::setup(int id) {
     auto downloadTask = req.get(URL);
     m_downloadListener.setFilter(downloadTask);
     } else {
+        CCTextureCache::get()->removeTextureForKey(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
         auto theSprite = CCSprite::create(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
         m_loadingCircle->fadeAndRemove();
         onDownloadFinished(theSprite);
