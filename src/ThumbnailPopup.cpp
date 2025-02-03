@@ -12,9 +12,23 @@ void ThumbnailPopup::onDownload(CCObject* sender){
     std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
     CCApplication::sharedApplication()->openURL(URL.c_str());
 }
-
+void ThumbnailPopup::onOpenFolder(CCObject* sender){
+    geode::utils::file::openFolder(Mod::get()->getSaveDir());
+}
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
-    
+    if (m_isScreenshotPreview){
+        createQuickPopup(
+            "Submit",
+            "To <cy>submit a thumbnail</c> you need to join the <cb>Discord</c> server.\nDo you want to <cg>join</c>?",
+            "No Thanks", "JOIN!",
+            [this](auto, bool btn2) {
+                if (btn2) {
+                    CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
+                }
+            }
+        );
+        return;
+    }
     createQuickPopup(
         "Uh Oh!",
         "Hm.. This level seems to not have a <cj>Thumbnail</c>...\n"
@@ -55,7 +69,8 @@ bool ThumbnailPopup::setup(int id) {
 
     CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
     m_downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite, this, menu_selector(ThumbnailPopup::onDownload));
-    m_downloadBtn->setEnabled(false);
+    m_downloadBtn->setEnabled(true);
+    m_downloadBtn->setVisible((m_isScreenshotPreview ? false : true));
     m_downloadBtn->setColor({125,125,125});
    
     m_downloadBtn->setPosition({m_mainLayer->getContentSize().width - 5, 5});
@@ -72,17 +87,26 @@ bool ThumbnailPopup::setup(int id) {
     recenterBtn->setVisible(false);
     #endif
 
-    ButtonSprite* infoSprite = ButtonSprite::create("What's this?");
+    ButtonSprite* infoSprite = ButtonSprite::create((m_isScreenshotPreview ? "Submit" : "What's this?"));
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
 
-    m_infoBtn->setPosition({m_mainLayer->getContentSize().width/2, 6});
-    m_infoBtn->setVisible(false);
+    m_infoBtn->setPosition({(m_isScreenshotPreview ? 293.f : m_mainLayer->getContentSize().width/2.f), 6});
+    m_infoBtn->setVisible((m_isScreenshotPreview ? true : false));
     m_infoBtn->setZOrder(3);
     m_buttonMenu->addChild(m_infoBtn);
 
+    if (m_isScreenshotPreview){
+        ButtonSprite* ofSprite = ButtonSprite::create("Open Folder");
+        auto m_ofBtn = CCMenuItemSpriteExtra::create(ofSprite, this, menu_selector(ThumbnailPopup::onOpenFolder));
+
+        m_ofBtn->setPosition({132.f, 6});
+        m_ofBtn->setZOrder(3);
+        m_buttonMenu->addChild(m_ofBtn);
+    }
+
     m_theFunny = CCLabelBMFont::create("OwO", "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
-    m_theFunny->setVisible(false);
+    m_theFunny->setVisible((m_isScreenshotPreview ? true : false));
     m_theFunny->setScale(0.25f);
 
     m_mainLayer->addChild(m_theFunny);
@@ -91,7 +115,7 @@ bool ThumbnailPopup::setup(int id) {
     m_loadingCircle->setPosition({ -70,-40 });
     m_loadingCircle->setScale(1.f);
     m_loadingCircle->show();
-
+    if (!m_isScreenshotPreview){
     if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", m_levelID))){
         m_image = image;
         m_loadingCircle->fadeAndRemove();
@@ -123,6 +147,13 @@ bool ThumbnailPopup::setup(int id) {
     });
     auto downloadTask = req.get(URL);
     m_downloadListener.setFilter(downloadTask);
+    } else {
+        auto theSprite = CCSprite::create(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
+        m_loadingCircle->fadeAndRemove();
+        onDownloadFinished(theSprite);
+        return true;
+        
+    }
 
     this->setTouchEnabled(true);
     cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, cocos2d::kCCMenuHandlerPriority, true);
@@ -181,8 +212,9 @@ void ThumbnailPopup::onDownloadFail() {
 
 }
 
-ThumbnailPopup* ThumbnailPopup::create(int id) {
+ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
+    ret->m_isScreenshotPreview = true;
     ret->m_levelID = id;
     if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();

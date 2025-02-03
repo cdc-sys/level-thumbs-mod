@@ -10,6 +10,7 @@ protected:
     float m_initialDistance;
     float m_initialScale;
     bool wasZooming=false;
+    bool m_isScreenshotPreview;
     CCPoint m_touchMidPoint;
     int m_levelID;
     float m_maxHeight = 220;
@@ -27,11 +28,12 @@ protected:
     void imageCreationFinished(CCImage* image);
     void onDownload(CCObject* sender);
     void openDiscordServerPopup(CCObject* sender);
+    void onOpenFolder(CCObject* sender);
     void recenter(CCObject* sender);
     bool ccTouchBegan(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
     void ccTouchMoved(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
     void ccTouchEnded(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
 
 public:
-    static ThumbnailPopup* create(int id);
+    static ThumbnailPopup* create(int id,bool screenshotPreview=false);
 };

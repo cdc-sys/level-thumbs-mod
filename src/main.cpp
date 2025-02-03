@@ -9,6 +9,7 @@ using namespace geode::prelude;
 #include <Geode/utils/web.hpp>
 #include "utils.hpp"
 #include "ImageCache.hpp"
+#include "ThumbnailPopup.hpp"
 #include "Zoom.hpp"
 
 // thumbnail taking code + pauselayer hook
@@ -81,6 +82,7 @@ class $modify(MyPauseLayer,PauseLayer){
     }
     void onScreenshot(CCObject* sender){
         doScreenshot();
+        ThumbnailPopup::create((int)PlayLayer::get()->m_level->m_levelID,true)->show();
     }
     void customSetup() {
         PauseLayer::customSetup();
