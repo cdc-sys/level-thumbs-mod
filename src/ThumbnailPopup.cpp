@@ -157,10 +157,11 @@ bool ThumbnailPopup::setup(int id) {
         return true;
         
     }
-
+    #ifndef GEODE_IS_WINDOWS
     this->setTouchEnabled(true);
     cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, cocos2d::kCCMenuHandlerPriority, true);
     handleTouchPriority(this);
+    #endif
 
     return true;
 }
