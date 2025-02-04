@@ -43,11 +43,12 @@ class $modify(MyPauseLayer,PauseLayer){
 		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
 
 		for (auto* obj : objects) {
-			if (obj->getID() != "main-node")
+			if (obj->getID() != "main-node"&&obj != PlayLayer::get()->m_shaderLayer)
 			{
 				obj->setPosition(obj->getPosition() + ccp(10000, 10000));
 			}
 		}
+
     }
     void show(){
         this->setVisible(true);
@@ -59,7 +60,7 @@ class $modify(MyPauseLayer,PauseLayer){
 		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
 
 		for (auto* obj : objects) {
-			if (obj->getID() != "main-node")
+			if (obj->getID() != "main-node"&&obj != PlayLayer::get()->m_shaderLayer)
 			{
 				obj->setPosition(obj->getPosition() - ccp(10000, 10000));
 			}
