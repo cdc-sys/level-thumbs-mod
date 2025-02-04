@@ -2,4 +2,5 @@
 
 namespace levelthumbs{
     int getQualityMultiplier();
+    std::string getBaseUrl();
 }
