@@ -59,7 +59,7 @@
             "name": "Level Thumbnails url",
             "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
             "type": "string",
-            "match": "[-:\/._a-zA-Z0-9]+",
+            "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
             "default": ""
         }
