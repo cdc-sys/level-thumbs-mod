@@ -191,14 +191,8 @@ class $modify(MyLevelCell, LevelCell) {
             imageCreationFinished(m_fields->m_image);
             return;
         }
-
-	std::string baseURL = Mod::get()->getSettingValue<std::string>("string-setting-example");
-	if (baseURL == "")
-	    baseURL = "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs";
-	if (baseURL.ends_with("/"))
-	    baseURL.pop_back(); // remove the last character (aka: as "/")
 		
-        std::string URL = fmt::format("{}/{}.png", baseURL, (int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         int id = m_level->m_levelID.value();
 
         auto req = web::WebRequest();
