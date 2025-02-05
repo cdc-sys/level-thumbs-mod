@@ -125,7 +125,7 @@ bool ThumbnailPopup::setup(int id) {
         return true;
     }
     
-    std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
+    std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
 
     auto req = web::WebRequest();
     m_downloadListener.bind([this](web::WebTask::Event* e){
