@@ -118,7 +118,7 @@ bool ThumbnailPopup::setup(int id) {
     m_loadingCircle->setScale(1.f);
     m_loadingCircle->show();
     if (!m_isScreenshotPreview){
-    if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", m_levelID))){
+    if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", m_levelID), levelthumbs::getBaseUrl())){
         m_image = image;
         m_loadingCircle->fadeAndRemove();
         imageCreationFinished(m_image);
@@ -139,7 +139,7 @@ bool ThumbnailPopup::setup(int id) {
                     m_image->autorelease();
                     m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
                     geode::Loader::get()->queueInMainThread([this](){
-                        ImageCache::get()->addImage(m_image, fmt::format("thumb-{}", m_levelID));
+                        ImageCache::get()->addImage(m_image, fmt::format("thumb-{}", m_levelID), levelthumbs::getBaseUrl());
                         imageCreationFinished(m_image);
                     });
                 });
