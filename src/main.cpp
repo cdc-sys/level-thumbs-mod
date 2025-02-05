@@ -186,8 +186,8 @@ class $modify(MyLevelCell, LevelCell) {
     }
 
     void startDownload() {
-
-        if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", (int)m_level->m_levelID))){
+        log::debug("startDownload()");
+        if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", (int)m_level->m_levelID), levelthumbs::getBaseUrl())){
             m_fields->m_image = image;
             imageCreationFinished(m_fields->m_image);
             return;
@@ -210,7 +210,7 @@ class $modify(MyLevelCell, LevelCell) {
                         m_fields->m_image = new CCImage();
                         m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
                         geode::Loader::get()->queueInMainThread([data, id, this](){
-                            ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", id));
+                            ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", id), levelthumbs::getBaseUrl());
                             m_fields->m_image->release();
                             imageCreationFinished(m_fields->m_image);
                         });
