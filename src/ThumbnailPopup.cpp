@@ -9,7 +9,7 @@ using namespace geode::prelude;
 #include "ImageCache.hpp"
 
 void ThumbnailPopup::onDownload(CCObject* sender){
-    std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
+    std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
     CCApplication::sharedApplication()->openURL(URL.c_str());
 }
 void ThumbnailPopup::onOpenFolder(CCObject* sender){
