@@ -10,7 +10,7 @@ ImageCache::ImageCache(){
 }
 
 std::string ImageCache::getKey(std::string key, std::string url){
-    return std::format("{}-{}", key, url);
+    return fmt::format("{}-{}", key, url);
 }
 
 void ImageCache::addImage(CCImage* image, std::string key, std::string url){
