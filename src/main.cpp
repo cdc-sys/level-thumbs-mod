@@ -186,7 +186,6 @@ class $modify(MyLevelCell, LevelCell) {
     }
 
     void startDownload() {
-        log::debug("startDownload()");
         if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", (int)m_level->m_levelID), levelthumbs::getBaseUrl())){
             m_fields->m_image = image;
             imageCreationFinished(m_fields->m_image);
