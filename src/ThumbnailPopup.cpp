@@ -9,7 +9,7 @@ using namespace geode::prelude;
 #include "ImageCache.hpp"
 
 void ThumbnailPopup::onDownload(CCObject* sender){
-    std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
+    std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
     CCApplication::sharedApplication()->openURL(URL.c_str());
 }
 void ThumbnailPopup::onOpenFolder(CCObject* sender){
@@ -118,14 +118,14 @@ bool ThumbnailPopup::setup(int id) {
     m_loadingCircle->setScale(1.f);
     m_loadingCircle->show();
     if (!m_isScreenshotPreview){
-    if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", m_levelID))){
+    if(CCImage* image = ImageCache::get()->getImage(fmt::format("thumb-{}", m_levelID), levelthumbs::getBaseUrl())){
         m_image = image;
         m_loadingCircle->fadeAndRemove();
         imageCreationFinished(m_image);
         return true;
     }
     
-    std::string URL = fmt::format("https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs/{}.png", m_levelID);
+    std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
 
     auto req = web::WebRequest();
     m_downloadListener.bind([this](web::WebTask::Event* e){
@@ -139,7 +139,7 @@ bool ThumbnailPopup::setup(int id) {
                     m_image->autorelease();
                     m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
                     geode::Loader::get()->queueInMainThread([this](){
-                        ImageCache::get()->addImage(m_image, fmt::format("thumb-{}", m_levelID));
+                        ImageCache::get()->addImage(m_image, fmt::format("thumb-{}", m_levelID), levelthumbs::getBaseUrl());
                         imageCreationFinished(m_image);
                     });
                 });

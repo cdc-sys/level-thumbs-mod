@@ -1,3 +1,6 @@
+# v1.<INSERT VER NUM>
+- Added 'Level thumbnails url' setting
+
 # v1.2.1
 - Fix double dragging on the thumbnail popup (windows)
 - Add VERY EXPERIMENTAL in-game thumbnail taking.

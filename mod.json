@@ -54,6 +54,14 @@
             "description": "<cr>HEAVILY WIP, EXPECT ISSUES.</c>",
             "type":"bool",
             "default":false
+        },
+        "level-thumbnails-url": {
+            "name": "Level Thumbnails url",
+            "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
+            "type": "string",
+            "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
+            "default": ""
         }
     },
 
