@@ -61,7 +61,7 @@
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
-            "default": ""
+            "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
         }
     },
 

@@ -9,10 +9,5 @@ int levelthumbs::getQualityMultiplier(){
 
 std::string levelthumbs::getBaseUrl(){
     std::string baseURL = Mod::get()->getSettingValue<std::string>("level-thumbnails-url");
-	if (baseURL == "")
-	    baseURL = "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs";
-	if (baseURL.ends_with("/"))
-	    baseURL.pop_back(); // remove the last character (aka: as "/")
-
     return baseURL;
 }
