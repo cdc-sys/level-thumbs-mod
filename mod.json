@@ -3,9 +3,10 @@
     "gd": { 
         "win": "2.2074", 
         "android": "2.2074",
-        "mac": "2.2074"
+        "mac": "2.2074",
+        "ios": "2.2074"
     },
-    "version": "v1.2.1",
+    "version": "v1.2.2",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
