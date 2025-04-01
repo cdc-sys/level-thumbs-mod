@@ -22,7 +22,7 @@ std::array<int,2> ratio(int a,int b){
     return {a/gcd(a,b),b/gcd(a,b)};
 }
 
-#ifndef GEODE_IS_MACOS
+#if !defined(GEODE_IS_MACOS) && !defined(GEODE_IS_IOS)
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
         this->setVisible(false);
