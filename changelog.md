@@ -1,4 +1,4 @@
-# v1.<INSERT VER NUM>
+# v1.2.2
 - Added 'Level thumbnails url' setting
 
 # v1.2.1

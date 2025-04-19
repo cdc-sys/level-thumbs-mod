@@ -63,6 +63,29 @@
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
             "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
+        },
+        "darkening":{
+            "name": "Level BG Darkening",
+            "description": "",
+            "type":"int",
+            "min": 1,
+            "max":255,
+            "default":100
+        },
+        "enable-blur":{
+            "name":"Level BG Blur",
+            "description": "",
+            "type":"bool",
+            "default":false
+        },
+        "blur-strength":{
+            "name":"Level BG Blur Strength",
+            "description": "",
+            "type":"int",
+            "min": 1,
+            "max": 10,
+            "default":2,
+            "enable-if": "enable-blur"
         }
     },
 
