@@ -6,7 +6,7 @@
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.2.2",
+    "version": "v1.3.0",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -64,23 +64,29 @@
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
             "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
         },
+        "level-bg":{
+            "name":"Level BG",
+            "description": "Enable displaying thumbnails as the background in the online level screen.",
+            "type": "bool",
+            "default":true
+        },
         "darkening":{
             "name": "Level BG Darkening",
-            "description": "",
             "type":"int",
             "min": 1,
             "max":255,
+            "enable-if": "level-bg",
             "default":100
         },
         "enable-blur":{
             "name":"Level BG Blur",
-            "description": "",
             "type":"bool",
+            "enable-if": "level-bg",
             "default":false
         },
         "blur-strength":{
             "name":"Level BG Blur Strength",
-            "description": "",
+            "description": "How blurred the background will be.",
             "type":"int",
             "min": 1,
             "max": 10,

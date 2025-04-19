@@ -10,6 +10,7 @@ using namespace geode::prelude;
 class $modify(MyLevelInfoLayer,LevelInfoLayer){
     bool init(GJGameLevel* level, bool challenge) {
         if (!LevelInfoLayer::init(level, challenge)) return false;
+        if (!Mod::get()->getSettingValue<bool>("level-bg")) return true;
         auto director = CCDirector::get();
         auto winSize = director->getWinSize();
         auto darkening = static_cast<GLubyte>(255-Mod::get()->getSettingValue<int64_t>("darkening"));
@@ -29,7 +30,11 @@ class $modify(MyLevelInfoLayer,LevelInfoLayer){
             this->addChild(sprite);
 
             if (Mod::get()->getSettingValue<bool>("enable-blur")){
-                // impl blur here
+                // this will do for the minor release, while i search for a good blur shader
+                auto alert = FLAlertLayer::create(nullptr,"Coming Soon","<cj>Blur</c> currently isn't implemented, but will be in a <cg>future update</c>.\nStay tuned.\n","OK",nullptr);
+                alert->m_scene = this;
+                alert->show();
+                Mod::get()->setSettingValue<bool>("enable-blur", false);
             }
             
 

@@ -1,5 +1,6 @@
-# v1.2.2
+# v1.3.0
 - Added 'Level thumbnails url' setting
+- Added displaying thumbnails as the background in LevelInfoLayer.
 
 # v1.2.1
 - Fix double dragging on the thumbnail popup (windows)
