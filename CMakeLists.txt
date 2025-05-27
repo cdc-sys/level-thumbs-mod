@@ -26,6 +26,6 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 add_subdirectory(libwebp)
 include_directories(libwebp/src/)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/libwebp/webp)
+target_link_libraries(${PROJECT_NAME} webp)
 
 setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.7.1)
