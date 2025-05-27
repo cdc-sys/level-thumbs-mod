@@ -61,7 +61,7 @@
             "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
-            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/0123456789",
             "default": "https://levelthumbs.prevter.me/thumbnail"
         },
         "legacy-url":{
@@ -75,7 +75,7 @@
             "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.\n(Legacy PNGs)",
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
-            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/0123456789",
             "enable-if": "legacy-url",
             "default": "https://tjcsucht.net/levelthumbs"
         },
