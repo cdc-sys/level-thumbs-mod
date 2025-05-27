@@ -57,12 +57,18 @@
             "default":false
         },
         "level-thumbnails-url": {
-            "name": "Level Thumbnails url",
+            "name": "Level Thumbnails URL",
             "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
             "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
+        },
+        "legacy-url":{
+            "name":"Legacy URL",
+            "description": "Turn this on if you're using a server that still uses the old <cj>png</c> format",
+            "type":"bool",
+            "default":false
         },
         "level-bg":{
             "name":"Level BG",

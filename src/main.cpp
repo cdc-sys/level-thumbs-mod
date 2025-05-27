@@ -194,8 +194,10 @@ class $modify(MyLevelCell, LevelCell) {
             return;
         }
 		
-        std::string URL = fmt::format("{}/{}", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}/small", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
+        if (Mod::get()->getSettingValue<bool>("legacy-url")) URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         int id = m_level->m_levelID.value();
+        geode::log::info("{}",URL);
 
         auto req = web::WebRequest();
         m_fields->m_downloadListener.bind([id, this](web::WebTask::Event* e){
@@ -210,23 +212,27 @@ class $modify(MyLevelCell, LevelCell) {
                         m_fields->m.lock();
                         m_fields->m_image = new CCImage();
 
+                        // png support (for legacy sources)
+                        bool png = m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
                     
-                        // get the image dimensions
-                        WebPDecoderConfig config;
-                        WebPInitDecoderConfig(&config);
-                        if (WebPInitDecoderConfig(&config) == 0) return;
-                        if (WebPGetFeatures(const_cast<uint8_t*>(data.data()), data.size(), &config.input) != VP8_STATUS_OK) return;
-                        if (config.input.width == 0 || config.input.height == 0) return;
+                        if (!png){
+                            // get the image dimensions
+                            WebPDecoderConfig config;
+                            WebPInitDecoderConfig(&config);
+                            if (WebPInitDecoderConfig(&config) == 0) return;
+                            if (WebPGetFeatures(const_cast<uint8_t*>(data.data()), data.size(), &config.input) != VP8_STATUS_OK) return;
+                            if (config.input.width == 0 || config.input.height == 0) return;
                         
-                        // decode webp
-                        auto webp = WebPDecodeRGBA(const_cast<uint8_t*>(data.data()), data.size(), &config.input.width,&config.input.height);
-                        if (webp == NULL) return;
+                            // decode webp
+                            auto webp = WebPDecodeRGBA(const_cast<uint8_t*>(data.data()), data.size(), &config.input.width,&config.input.height);
+                            if (webp == NULL) return;
                         
-                        // initialize an image with the webp
-                        m_fields->m_image->initWithImageData(webp,data.size(),cocos2d::CCImage::kFmtRawData,config.input.width,config.input.height);
+                            // initialize an image with the webp
+                            m_fields->m_image->initWithImageData(webp,data.size(),cocos2d::CCImage::kFmtRawData,config.input.width,config.input.height);
                         
-                        // free the decoded webp
-                        free(webp);
+                            // free the decoded webp
+                            free(webp);
+                        }
                         
                         geode::Loader::get()->queueInMainThread([data, id, this](){
                             ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", id), levelthumbs::getBaseUrl());

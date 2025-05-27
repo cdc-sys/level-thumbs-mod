@@ -125,7 +125,8 @@ bool ThumbnailPopup::setup(int id) {
         return true;
     }
     
-    std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
+    std::string URL = fmt::format("{}/{}/small", levelthumbs::getBaseUrl(), m_levelID);
+    if (Mod::get()->getSettingValue<bool>("legacy-url")) URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
 
     auto req = web::WebRequest();
     m_downloadListener.bind([this](web::WebTask::Event* e){
@@ -137,7 +138,29 @@ bool ThumbnailPopup::setup(int id) {
                 std::thread imageThread = std::thread([data,this](){
                     m_image = new CCImage();
                     m_image->autorelease();
-                    m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+
+                    // png support (for legacy sources)
+                    bool png = m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+                    
+                    if (!png){
+                        // get the image dimensions
+                        WebPDecoderConfig config;
+                        WebPInitDecoderConfig(&config);
+                        if (WebPInitDecoderConfig(&config) == 0) return;
+                        if (WebPGetFeatures(const_cast<uint8_t*>(data.data()), data.size(), &config.input) != VP8_STATUS_OK) return;
+                        if (config.input.width == 0 || config.input.height == 0) return;
+                        
+                        // decode webp
+                        auto webp = WebPDecodeRGBA(const_cast<uint8_t*>(data.data()), data.size(), &config.input.width,&config.input.height);
+                        if (webp == NULL) return;
+                        
+                        // initialize an image with the webp
+                        m_image->initWithImageData(webp,data.size(),cocos2d::CCImage::kFmtRawData,config.input.width,config.input.height);
+                        
+                        // free the decoded webp
+                        free(webp);
+                    }
+
                     geode::Loader::get()->queueInMainThread([this](){
                         ImageCache::get()->addImage(m_image, fmt::format("thumb-{}", m_levelID), levelthumbs::getBaseUrl());
                         imageCreationFinished(m_image);
