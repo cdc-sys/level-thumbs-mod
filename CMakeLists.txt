@@ -26,7 +26,7 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 # add libwebp
-set(USE_SSE2_INSTRUCTIONS ON FORCE)
+add_compile_options(-msse2)
 set(WEBP_BUILD_CWEBP OFF CACHE BOOL "" FORCE)
 set(WEBP_BUILD_DWEBP OFF CACHE BOOL "" FORCE)
 set(WEBP_BUILD_IMG2WEBP OFF CACHE BOOL "" FORCE)
