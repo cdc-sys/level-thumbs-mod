@@ -194,10 +194,10 @@ class $modify(MyLevelCell, LevelCell) {
             return;
         }
 		
-        std::string URL = fmt::format("{}/{}/small", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         if (Mod::get()->getSettingValue<bool>("legacy-url")) URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         int id = m_level->m_levelID.value();
-        geode::log::info("{}",URL);
+        //geode::log::info("{}",URL);
 
         auto req = web::WebRequest();
         m_fields->m_downloadListener.bind([id, this](web::WebTask::Event* e){

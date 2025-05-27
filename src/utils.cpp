@@ -7,6 +7,10 @@ int levelthumbs::getQualityMultiplier(){
 }
 
 std::string levelthumbs::getBaseUrl(){
-    std::string baseURL = Mod::get()->getSettingValue<std::string>("level-thumbnails-url");
-    return baseURL;
+    bool legacy = Mod::get()->getSettingValue<bool>("legacy-url");
+    if (legacy){
+        return Mod::get()->getSettingValue<std::string>("level-thumbnails-url");
+    } else {
+        return Mod::get()->getSettingValue<std::string>("level-thumbnails-url-new");
+    }
 }

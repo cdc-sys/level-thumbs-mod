@@ -125,7 +125,7 @@ bool ThumbnailPopup::setup(int id) {
         return true;
     }
     
-    std::string URL = fmt::format("{}/{}/small", levelthumbs::getBaseUrl(), m_levelID);
+    std::string URL = fmt::format("{}/{}", levelthumbs::getBaseUrl(), m_levelID);
     if (Mod::get()->getSettingValue<bool>("legacy-url")) URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
 
     auto req = web::WebRequest();

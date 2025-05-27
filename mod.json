@@ -6,7 +6,7 @@
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.3.0",
+    "version": "v1.4.0",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -56,19 +56,28 @@
             "type":"bool",
             "default":false
         },
-        "level-thumbnails-url": {
+        "level-thumbnails-url-new": {
             "name": "Level Thumbnails URL",
             "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
-            "default": "https://raw.githubusercontent.com/cdc-sys/level-thumbnails/main/thumbs"
+            "default": "https://levelthumbs.prevter.me/thumbnail"
         },
         "legacy-url":{
             "name":"Legacy URL",
             "description": "Turn this on if you're using a server that still uses the old <cj>png</c> format",
             "type":"bool",
             "default":false
+        },
+        "level-thumbnails-url": {
+            "name": "Legacy Images URL",
+            "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.\n(Legacy PNGs)",
+            "type": "string",
+            "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/",
+            "enable-if": "legacy-url",
+            "default": "https://tjcsucht.net/levelthumbs"
         },
         "level-bg":{
             "name":"Level BG",
