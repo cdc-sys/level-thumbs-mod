@@ -12,6 +12,8 @@ using namespace geode::prelude;
 #include "ThumbnailPopup.hpp"
 #include "Zoom.hpp"
 
+#include "webp/decode.h"
+
 // thumbnail taking code + pauselayer hook
 
 int gcd (int a, int b) {
@@ -192,7 +194,7 @@ class $modify(MyLevelCell, LevelCell) {
             return;
         }
 		
-        std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         int id = m_level->m_levelID.value();
 
         auto req = web::WebRequest();
@@ -207,7 +209,25 @@ class $modify(MyLevelCell, LevelCell) {
                     std::thread imageThread = std::thread([data, id, this](){
                         m_fields->m.lock();
                         m_fields->m_image = new CCImage();
-                        m_fields->m_image->initWithImageData(const_cast<uint8_t*>(data.data()),data.size());
+
+                    
+                        // get the image dimensions
+                        WebPDecoderConfig config;
+                        WebPInitDecoderConfig(&config);
+                        if (WebPInitDecoderConfig(&config) == 0) return;
+                        if (WebPGetFeatures(const_cast<uint8_t*>(data.data()), data.size(), &config.input) != VP8_STATUS_OK) return;
+                        if (config.input.width == 0 || config.input.height == 0) return;
+                        
+                        // decode webp
+                        auto webp = WebPDecodeRGBA(const_cast<uint8_t*>(data.data()), data.size(), &config.input.width,&config.input.height);
+                        if (webp == NULL) return;
+                        
+                        // initialize an image with the webp
+                        m_fields->m_image->initWithImageData(webp,data.size(),cocos2d::CCImage::kFmtRawData,config.input.width,config.input.height);
+                        
+                        // free the decoded webp
+                        free(webp);
+                        
                         geode::Loader::get()->queueInMainThread([data, id, this](){
                             ImageCache::get()->addImage(m_fields->m_image, fmt::format("thumb-{}", id), levelthumbs::getBaseUrl());
                             m_fields->m_image->release();
