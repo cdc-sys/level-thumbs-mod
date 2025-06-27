@@ -6,6 +6,7 @@ using namespace geode::prelude;
 
 class ThumbnailPopup : public Popup<int> {
 protected:
+    CCSprite* m_screenshotPreview;
     std::unordered_set<Ref<CCTouch>> m_touches;
     float m_initialDistance;
     float m_initialScale;
@@ -36,4 +37,5 @@ protected:
 
 public:
     static ThumbnailPopup* create(int id,bool screenshotPreview=false);
+    static ThumbnailPopup* create(int id,CCSprite* image);
 };

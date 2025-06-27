@@ -13,6 +13,7 @@ using namespace geode::prelude;
 #include "Zoom.hpp"
 
 #include "webp/decode.h"
+#include "webp/encode.h"
 
 // thumbnail taking code + pauselayer hook
 
@@ -67,7 +68,7 @@ class $modify(MyPauseLayer,PauseLayer){
 			}
 		}
     }
-    void doScreenshot(){
+    CCSprite* doScreenshot(){
         CCDirector* director = CCDirector::sharedDirector();
         CCScene* scene = CCScene::get();
         auto scaleFactor = CCDirector::get()->getContentScaleFactor();
@@ -85,26 +86,47 @@ class $modify(MyPauseLayer,PauseLayer){
         auto image = renderTexture->newCCImage();
 
         if (image){
-            std::string path = fmt::format("{}/{}.png", Mod::get()->getSaveDir(), (int)PlayLayer::get()->m_level->m_levelID);
-            image->saveToFile(path.c_str());
+            std::thread encodingThread = std::thread([image](){
+                image->retain();
+                std::string path = fmt::format("{}/{}.webp", Mod::get()->getSaveDir(), (int)PlayLayer::get()->m_level->m_levelID);
+                uint8_t* webp;
 
-            //std::ofstream ofs(Mod::get()->getSaveDir()/fmt::format("/{}.png", (int)PlayLayer::get()->m_level->m_levelID),std::ios::binary);
+                size_t size = WebPEncodeLosslessRGBA(image->getData(), image->getWidth(), image->getHeight(),image->getWidth()*4,&webp);
+                if (size == 0) {
+                    FLAlertLayer::create("Oops!","WebP encoding failed.","OK")->show();
+                    free(webp);
+                    return;
+                }
+
+                std::ofstream fp;
+                fp.open(path,std::ios::binary );
+                fp.write((const char*)webp, size);
+                fp.close();
             
-            //for(int x=0; x<image->getDataLen(); x++) {
-                //ofs.write((char*)image->getData() + x, 1);
-            //}
+                free(webp);
+                image->release();
+            });
+            encodingThread.detach();
 
-            //ofs.close();
-            image->release();
+            auto texture = new CCTexture2D();
+            texture->initWithImage(image);
+            auto sprite = CCSprite::createWithTexture(texture);
+            texture->release();
+            return sprite;
         }
+        return nullptr;
     }
     void onScreenshot(CCObject* sender){
         if (PlayLayer::get()->m_shaderLayer->getParent()){
             FLAlertLayer::create("Oops!","Taking a thumbnail while a <cy>shader</c> is present on screen is <cr>not yet supported.</c>","OK")->show();
             return;
         }
-        doScreenshot();
-        ThumbnailPopup::create((int)PlayLayer::get()->m_level->m_levelID,true)->show();
+        auto screenshot = doScreenshot();
+        if (!screenshot) {
+            FLAlertLayer::create("Oops!","Screenshot failed.","OK")->show();
+            return;
+        }
+        ThumbnailPopup::create((int)PlayLayer::get()->m_level->m_levelID,screenshot)->show();
     }
     void customSetup() {
         PauseLayer::customSetup();

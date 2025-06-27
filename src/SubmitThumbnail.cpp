@@ -48,7 +48,7 @@ void SubmitThumbnail::step1(){
 }
 void SubmitThumbnail::step2(std::string token){
     m_loadingOverlay->changeStatus("Uploading...");
-    std::ifstream ifstream(Mod::get()->getSaveDir()/fmt::format("{}.png",m_id),std::ios::binary);
+    std::ifstream ifstream(Mod::get()->getSaveDir()/fmt::format("{}.webp",m_id),std::ios::binary);
     //if (!ifstream.is_open()) return;
 
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(ifstream)), std::istreambuf_iterator<char>());

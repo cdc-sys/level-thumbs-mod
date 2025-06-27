@@ -189,10 +189,9 @@ bool ThumbnailPopup::setup(int id) {
     auto downloadTask = req.get(URL);
     m_downloadListener.setFilter(downloadTask);
     } else {
-        CCTextureCache::get()->removeTextureForKey(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
-        auto theSprite = CCSprite::create(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
+        //CCTextureCache::get()->removeTextureForKey(fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)this->m_levelID).c_str());
         m_loadingCircle->fadeAndRemove();
-        onDownloadFinished(theSprite);
+        onDownloadFinished(m_screenshotPreview);
         return true;
         
     }
@@ -256,7 +255,19 @@ void ThumbnailPopup::onDownloadFail() {
 
 ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
-    ret->m_isScreenshotPreview = screenshotPreview;
+    ret->m_isScreenshotPreview = false;
+    ret->m_levelID = id;
+    if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
+        ret->autorelease();
+        return ret;
+    }
+    CC_SAFE_DELETE(ret);
+    return nullptr;
+}
+ThumbnailPopup* ThumbnailPopup::create(int id,CCSprite* image) {
+    auto ret = new ThumbnailPopup();
+    ret->m_screenshotPreview = image;
+    ret->m_isScreenshotPreview = true;
     ret->m_levelID = id;
     if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
