@@ -12,7 +12,7 @@ private:
     LoadingOverlay* m_loadingOverlay;
 
     void step1();
-    void step2(std::string role,std::string token);
+    void step2(std::string token);
 public:
     SubmitThumbnail(int id,std::string argonToken,LoadingOverlay* loadingOverlay);
 };

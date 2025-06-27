@@ -22,6 +22,15 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender){
 }
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
     if (m_isScreenshotPreview){
+        if (Mod::get()->hasSavedValue("token")) {
+            createQuickPopup("Confirmation","Are you sure you want to <cg>submit</c> this <cy>thumbnail</c>?","No","Yes",[this](auto alert, bool btn2){
+                if (!btn2) return;
+                auto loadingOverlay = LoadingOverlay::create();
+                loadingOverlay->show();
+                SubmitThumbnail* st = new SubmitThumbnail(m_levelID, "", loadingOverlay);
+            });
+            return;
+        }
         createQuickPopup("Notice","To submit thumbnails you must <cg>authenticate</c> with your Geometry Dash account.","No","Authenticate",[this](auto alert,bool btn2){
             if (btn2){
                 auto loadingOverlay = LoadingOverlay::create("Authenticating with Argon.");
