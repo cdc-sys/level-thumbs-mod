@@ -45,6 +45,8 @@ void SubmitThumbnail::step2(std::string role,std::string token){
 
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(ifstream)), std::istreambuf_iterator<char>());
 
+    ifstream.close();
+
     auto req = web::WebRequest();
 
     m_eventListener.bind([this](web::WebTask::Event* e){

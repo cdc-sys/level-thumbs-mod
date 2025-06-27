@@ -89,6 +89,7 @@ class $modify(MyPauseLayer,PauseLayer){
             //image->saveToFile(path.c_str());
             std::ofstream ofs(Mod::get()->getSaveDir().string()+fmt::format("/{}.png",(int)PlayLayer::get()->m_level->m_levelID),std::ios::binary);
             ofs.write((char*) image->getData(), image->getDataLen());
+            ofs.close();
             image->release();
         }
     }
