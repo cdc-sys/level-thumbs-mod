@@ -37,6 +37,7 @@ set(WEBP_BUILD_EXTRAS OFF CACHE BOOL "" FORCE)
 add_subdirectory(libwebp)
 include_directories(libwebp/src/)
 target_link_libraries(${PROJECT_NAME} webp)
+target_compile_options(libwebp "-msse2")
 
 # add argon 
 CPMAddPackage("gh:GlobedGD/argon@1.1.6")
