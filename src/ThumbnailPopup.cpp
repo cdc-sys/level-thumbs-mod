@@ -4,9 +4,12 @@ using namespace geode::prelude;
 
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/utils/web.hpp>
+#include <argon/argon.hpp>
 #include "ThumbnailPopup.hpp"
 #include "utils.hpp"
 #include "ImageCache.hpp"
+#include "LoadingOverlay.hpp"
+#include "SubmitThumbnail.hpp"
 
 void ThumbnailPopup::onDownload(CCObject* sender){
     std::string URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), m_levelID);
@@ -19,16 +22,20 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender){
 }
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
     if (m_isScreenshotPreview){
-        createQuickPopup(
-            "Submit",
-            "To <cy>submit a thumbnail</c> you need to join the <cb>Discord</c> server.\nDo you want to <cg>join</c>?",
-            "No Thanks", "JOIN!",
-            [this](auto, bool btn2) {
-                if (btn2) {
-                    CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
-                }
+        createQuickPopup("Notice","To submit thumbnails you must <cg>authenticate</c> with your Geometry Dash account.","No","Authenticate",[this](auto alert,bool btn2){
+            if (btn2){
+                auto loadingOverlay = LoadingOverlay::create("Authenticating with Argon.");
+                loadingOverlay->show();
+                auto res = argon::startAuth([this,loadingOverlay](Result<std::string> res){
+                    if (!res){
+                        FLAlertLayer::create("Oops!","The <cy>Argon</c> auth process failed.","OK")->show();
+                        return;
+                    }
+                    loadingOverlay->changeStatus("Authenticating with the Level Thumbnails server.");
+                    SubmitThumbnail* st = new SubmitThumbnail(m_levelID, res.unwrap(), loadingOverlay);
+                });
             }
-        );
+        });
         return;
     }
     createQuickPopup(

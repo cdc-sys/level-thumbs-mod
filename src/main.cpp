@@ -37,7 +37,7 @@ class $modify(MyPauseLayer,PauseLayer){
 
         auto sceneScaledContentSize = CCScene::get()->getScaledContentSize();
         CCScene::get()->setPosition(
-            ((1920 - (sceneScaledContentSize.width * scaleFactor))/2/scaleFactor), 0.f
+            ((1920 - (sceneScaledContentSize.width * scaleFactor)) / 2 / scaleFactor), 0.f
         );
 
         PlayLayer::get()->getChildByType<UILayer>(0)->setVisible(false);
@@ -45,8 +45,7 @@ class $modify(MyPauseLayer,PauseLayer){
 		CCArrayExt<CCNode*> objects = PlayLayer::get()->getChildren();
 
 		for (auto* obj : objects) {
-			if (obj->getID() != "main-node"&&obj != PlayLayer::get()->m_shaderLayer)
-			{
+			if (obj->getID() != "main-node"&&obj != PlayLayer::get()->m_shaderLayer) {
 				obj->setPosition(obj->getPosition() + ccp(10000, 10000));
 			}
 		}

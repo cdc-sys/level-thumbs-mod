@@ -5,6 +5,7 @@
 #include <Geode/modify/CCMouseDispatcher.hpp>
 #include <Geode/modify/CCEGLView.hpp>
 #include <Geode/modify/CCScheduler.hpp>
+#include "ThumbnailPopup.hpp"
 
 Zoom* Zoom::instance = nullptr;
 
@@ -26,7 +27,7 @@ void Zoom::doZoom(float y){
     float zoom = 0.1f * (y > 0 ? -1 : 1);
     auto pos = getMousePos();
 
-    CCNode* thumbnailPopup = CCScene::get()->getChildByID("ThumbnailPopup");
+    ThumbnailPopup* thumbnailPopup = typeinfo_cast<ThumbnailPopup*>(CCScene::get()->getChildByID("ThumbnailPopup"));
     if (!thumbnailPopup) return;
 
     CCLayer* popupLayer = thumbnailPopup->getChildByType<CCLayer>(0);
@@ -36,7 +37,7 @@ void Zoom::doZoom(float y){
     if(!thumbnail) return;
 
     if(!checkIfInside(popupLayer, pos)) return;
-
+    
     CCSize contentSize = thumbnail->getContentSize();
 
     float oldScale = thumbnail->getScale();

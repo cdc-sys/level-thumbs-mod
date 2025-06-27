@@ -38,4 +38,8 @@ add_subdirectory(libwebp)
 include_directories(libwebp/src/)
 target_link_libraries(${PROJECT_NAME} webp)
 
+# add argon 
+CPMAddPackage("gh:GlobedGD/argon@1.1.6")
+target_link_libraries(${PROJECT_NAME} argon)
+
 setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.7.1)
