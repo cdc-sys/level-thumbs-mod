@@ -40,7 +40,7 @@ void SubmitThumbnail::step1(){
     m_eventListener.setFilter(task);
 }
 void SubmitThumbnail::step2(std::string role,std::string token){
-    std::ifstream ifstream(Mod::get()->getSaveDir().string()+fmt::format("/{}.png",m_id),std::ios::binary);
+    std::ifstream ifstream(Mod::get()->getSaveDir()/fmt::format("/{}.png",m_id),std::ios::binary);
     //if (!ifstream.is_open()) return;
 
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(ifstream)), std::istreambuf_iterator<char>());

@@ -24,7 +24,7 @@ std::array<int,2> ratio(int a,int b){
     return {a/gcd(a,b),b/gcd(a,b)};
 }
 
-//#if !defined(GEODE_IS_MACOS) && !defined(GEODE_IS_IOS)
+#if !defined(GEODE_IS_MACOS) && !defined(GEODE_IS_IOS)
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
         this->setVisible(false);
@@ -85,11 +85,16 @@ class $modify(MyPauseLayer,PauseLayer){
         auto image = renderTexture->newCCImage();
 
         if (image){
-            std::string path = fmt::format("{}/{}.png",Mod::get()->getSaveDir(),(int)PlayLayer::get()->m_level->m_levelID);
-            //image->saveToFile(path.c_str());
-            std::ofstream ofs(Mod::get()->getSaveDir().string()+fmt::format("/{}.png",(int)PlayLayer::get()->m_level->m_levelID),std::ios::binary);
-            ofs.write((char*) image->getData(), image->getDataLen());
-            ofs.close();
+            std::string path = fmt::format("{}/{}.png", Mod::get()->getSaveDir(), (int)PlayLayer::get()->m_level->m_levelID);
+            image->saveToFile(path.c_str());
+
+            //std::ofstream ofs(Mod::get()->getSaveDir()/fmt::format("/{}.png", (int)PlayLayer::get()->m_level->m_levelID),std::ios::binary);
+            
+            //for(int x=0; x<image->getDataLen(); x++) {
+                //ofs.write((char*)image->getData() + x, 1);
+            //}
+
+            //ofs.close();
             image->release();
         }
     }
@@ -114,7 +119,7 @@ class $modify(MyPauseLayer,PauseLayer){
         rightButtonMenu->updateLayout();
     }
 };
-//#endif
+#endif
 
 // level cell hook
 
