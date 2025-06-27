@@ -25,7 +25,7 @@ std::array<int,2> ratio(int a,int b){
     return {a/gcd(a,b),b/gcd(a,b)};
 }
 
-#if !defined(GEODE_IS_MACOS) && !defined(GEODE_IS_IOS)
+//#if !defined(GEODE_IS_MACOS) && !defined(GEODE_IS_IOS)
 class $modify(MyPauseLayer,PauseLayer){
     void hide(){
         this->setVisible(false);
@@ -141,7 +141,7 @@ class $modify(MyPauseLayer,PauseLayer){
         rightButtonMenu->updateLayout();
     }
 };
-#endif
+//#endif
 
 // level cell hook
 
