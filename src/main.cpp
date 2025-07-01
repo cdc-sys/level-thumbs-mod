@@ -223,7 +223,7 @@ class $modify(MyLevelCell, LevelCell) {
             return;
         }
 		
-        std::string URL = fmt::format("{}/{}", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
+        std::string URL = fmt::format("{}/{}/{}", levelthumbs::getBaseUrl(), (int)m_level->m_levelID, Mod::get()->getSettingValue<std::string>("image-quality-webp"));
         if (Mod::get()->getSettingValue<bool>("legacy-url")) URL = fmt::format("{}/{}.png", levelthumbs::getBaseUrl(), (int)m_level->m_levelID);
         int id = m_level->m_levelID.value();
         //geode::log::info("{}",URL);
