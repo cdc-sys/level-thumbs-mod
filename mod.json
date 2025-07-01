@@ -6,7 +6,7 @@
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.4.0",
+    "version": "v1.4.1",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -63,6 +63,14 @@
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/0123456789",
             "default": "https://levelthumbs.prevter.me/thumbnail"
+        },
+        "image-quality-webp": {
+            "type": "string",
+            "name": "Image quality",
+            "description": "The quality of the thumbnails that will be downloaded. Set to lower if you want to save bandwidth. Only works with the new <cj>webp</c> format",
+            "default": "high",
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "one-of": ["small", "medium", "high"]
         },
         "legacy-url":{
             "name":"Legacy URL",
