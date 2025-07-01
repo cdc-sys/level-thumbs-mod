@@ -69,7 +69,6 @@
             "name": "Image quality",
             "description": "The quality of the thumbnails that will be downloaded. Set to lower if you want to save bandwidth. Only works with the new <cj>webp</c> format",
             "default": "high",
-            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
             "one-of": ["small", "medium", "high"]
         },
         "legacy-url":{
