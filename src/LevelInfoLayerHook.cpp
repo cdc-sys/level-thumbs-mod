@@ -27,6 +27,7 @@ class $modify(MyLevelInfoLayer,LevelInfoLayer){
             sprite->setPosition({winSize.width/2,winSize.height/2});
             sprite->setScale(winSize.width/sprite->getContentWidth());
             sprite->setColor({darkening,darkening,darkening});
+            sprite->setID("level-thumbnails/thumbnail");
             this->addChild(sprite);
 
             if (Mod::get()->getSettingValue<bool>("enable-blur")){
