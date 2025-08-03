@@ -26,18 +26,23 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 # add libwebp
-set(WEBP_BUILD_CWEBP OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_DWEBP OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_IMG2WEBP OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_WEBPINFO OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_WEBPMUX OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_GIF2WEBP OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_ANIM_UTILS OFF CACHE BOOL "" FORCE)
-set(WEBP_BUILD_EXTRAS OFF CACHE BOOL "" FORCE)
-add_subdirectory(libwebp)
-include_directories(libwebp/src/)
+CPMAddPackage(
+  NAME libwebp
+  GITHUB_REPOSITORY "prevter/libwebp"
+  GIT_TAG "950daa7"
+  OPTIONS
+    "WEBP_BUILD_CWEBP OFF"
+    "WEBP_BUILD_DWEBP OFF"
+    "WEBP_BUILD_IMG2WEBP OFF"
+    "WEBP_BUILD_WEBPINFO OFF"
+    "WEBP_BUILD_WEBPMUX OFF"
+    "WEBP_BUILD_GIF2WEBP OFF"
+    "WEBP_BUILD_ANIM_UTILS OFF"
+    "WEBP_BUILD_EXTRAS OFF"
+)
+target_compile_definitions(webp PRIVATE _Float16=float)
+target_include_directories(${PROJECT_NAME} PRIVATE ${libwebp_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} webp)
-target_compile_options(webp PRIVATE "-msse2")
 
 # add argon 
 CPMAddPackage("gh:GlobedGD/argon@1.1.6")
