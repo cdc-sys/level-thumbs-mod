@@ -1,12 +1,12 @@
 {
-    "geode": "4.6.1",
+    "geode": "4.8.0",
     "gd": { 
         "win": "2.2074", 
         "android": "2.2074",
         "mac": "2.2074",
         "ios": "2.2074"
     },
-    "version": "v1.4.0",
+    "version": "v2.0.0-alpha",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -24,18 +24,17 @@
     },
 
     "settings": {
+        "show-in-browser": {
+            "name": "Enable Thumbnails",
+            "description": "Enables thumbnails in the <cy>Level Browser</c> and <cy>Search Results</c>. Doesn't affect the <cy>Level Page</c> background.",
+            "type": "bool",
+            "default": true
+        },
         "thumbnailButton": {
             "name": "Enable Thumbnail Button",
             "description": "Adds a <cj>button</c> in the <cy>Level Page</c> that lets you view the thumbnail of the level you are currently on.",
             "type": "bool",
             "default": true
-        },
-        "cache-limit": {
-            "name": "Cache Limit",
-            "description": "The amount of thumbnails that are cached in memory (Lower this if you have a low amount of available memory).",
-            "type": "int",
-            "min": 0,
-            "default": 50
         },
         "lists-limit-enabled":{
             "name":"Enable Thumbnail Limit In Lists",
@@ -51,69 +50,86 @@
             "enable-if": "lists-limit-enabled"
         },
         "enable-thumbnail-taking":{
-            "name":"In-Game Thumbnail Taking (EXPERIMENTAL)",
-            "description": "<cr>HEAVILY WIP, EXPECT ISSUES.</c>",
+            "name":"In-Game Thumbnail Taking",
+            "description": "Enables the ability to take thumbnails and upload them to the server from the pause menu.",
             "type":"bool",
             "default":false
         },
-        "level-thumbnails-url-new": {
-            "name": "Level Thumbnails URL",
-            "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.",
+        "cache-title": {
+            "name": "Caching",
+            "type": "title"
+        },
+        "cache-limit": {
+            "name": "Thumbnail Cache Limit",
+            "description": "The amount of thumbnails that are cached in memory (Lower this if you have a low amount of available memory).",
+            "type": "int",
+            "min": 0,
+            "default": 50
+        },
+        "api-title": {
+            "name": "API Settings",
+            "type": "title"
+        },
+        "level-thumbnails-api": {
+            "name": "Level Thumbnails API URL",
+            "description": "Base URL for the API that provides the thumbnails. Leave default for original.",
             "type": "string",
             "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
             "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/0123456789",
-            "default": "https://levelthumbs.prevter.me/thumbnail"
+            "default": "https://levelthumbs.prevter.me"
         },
         "legacy-url":{
-            "name":"Legacy URL",
-            "description": "Turn this on if you're using a server that still uses the old <cj>png</c> format",
+            "name":"Legacy Host",
+            "description": "Enable this to use the API in legacy mode (raw PNGs) instead of the new format.",
             "type":"bool",
             "default":false
         },
-        "level-thumbnails-url": {
-            "name": "Legacy Images URL",
-            "description": "This is the url where the mod will fetch the thumbnails. Leave default for original.\n(Legacy PNGs)",
-            "type": "string",
-            "match": "(http|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])",
-            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:.-_/0123456789",
-            "enable-if": "legacy-url",
-            "default": "https://tjcsucht.net/levelthumbs"
+        "level-bg-title": {
+            "name": "Level Page Background",
+            "type": "title"
         },
         "level-bg":{
-            "name":"Level BG",
+            "name":"Enable Background",
             "description": "Enable displaying thumbnails as the background in the online level screen.",
             "type": "bool",
             "default":true
         },
+        "level-bg-quality": {
+            "name": "Image Quality",
+            "description": "The quality of the thumbnail used for the background (setting this to low uses the already downloaded thumbnail, having blur enabled forces this to low).",
+            "type": "string",
+            "one-of": ["Low", "Medium", "High"],
+            "default": "High",
+            "enable-if": "level-bg && !level-bg-blur"
+        },
         "darkening":{
-            "name": "Level BG Darkening",
+            "name": "Background Darkening",
             "type":"int",
             "min": 1,
             "max":255,
             "enable-if": "level-bg",
             "default":100
         },
-        "enable-blur":{
-            "name":"Level BG Blur",
+        "level-bg-blur":{
+            "name":"Enable Blur",
             "type":"bool",
             "enable-if": "level-bg",
-            "default":false
+            "default":true
         },
         "blur-strength":{
-            "name":"Level BG Blur Strength",
+            "name":"Blur Radius",
             "description": "How blurred the background will be.",
             "type":"int",
             "min": 1,
             "max": 10,
-            "default":2,
-            "enable-if": "enable-blur"
+            "default":3,
+            "enable-if": "level-bg-blur"
         }
     },
 
-    "dependencies": [{
-        "id": "geode.node-ids",
-        "version": ">=1.7.1",
-        "importance": "required"
-    }]
+    "dependencies": {
+        "geode.node-ids": ">=1.7.1",
+        "prevter.imageplus": ">=1.0.0"
+    }
     
 }
