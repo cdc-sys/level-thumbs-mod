@@ -1,6 +1,7 @@
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include "../managers/SettingsManager.hpp"
 #include "../managers/ThumbnailManager.hpp"
+#include "../layers/ThumbnailPopup.hpp"
 
 using namespace geode::prelude;
 
@@ -237,6 +238,19 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
             return false;
         }
 
+        if (auto menu = getChildByID("left-side-menu")) {
+            if (Settings::showThumbnailButton()) {
+                auto sprite = CCSprite::create("thumbnailButton.png"_spr);
+                auto button = CCMenuItemExt::createSpriteExtra(sprite,[this](CCObject* sender){
+                    ThumbnailPopup::create(m_level->m_levelID)->show();
+                });
+        
+                button->setID("thumbnail-button");
+                menu->addChild(button);
+                menu->updateLayout();
+            }
+        }
+
         if (!Settings::isShowLevelBackground()) {
             return true;
         }
@@ -266,6 +280,7 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
 
         // if we don't have shaders enabled, and the quality is not small, run a fetch for the new quality
         this->updateBackground(levelID, bgQuality);
+
 
         return true;
     }

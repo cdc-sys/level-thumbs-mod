@@ -166,6 +166,8 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         }
 
         auto fields = m_fields.self();
+        // update progress at the beginning of the download to not have instant downloads look weird
+        this->updateProgressLabel(0);
         fields->m_fetchListener.bind(this, &ThumbnailLevelCell::handleDownloading);
         fields->m_fetchListener.setFilter(ThumbnailManager::get().fetchThumbnail(
             m_level->m_levelID, ThumbnailManager::Quality::Small
