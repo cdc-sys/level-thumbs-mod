@@ -1,4 +1,3 @@
-#include "Geode/loader/SettingV3.hpp"
 #include <Geode/Geode.hpp>
 
 using namespace geode::prelude;
@@ -7,7 +6,6 @@ using namespace geode::prelude;
 #include <Geode/utils/web.hpp>
 #include <argon/argon.hpp>
 #include "ThumbnailPopup.hpp"
-#include "../managers/SettingsManager.hpp"
 
 void ThumbnailPopup::onDownload(CCObject* sender){
     CCApplication::sharedApplication()->openURL(ThumbnailManager::get().getThumbnailUrl(m_levelID).c_str());
@@ -44,7 +42,7 @@ bool ThumbnailPopup::setup(int id) {
 
     CCLayerColor* mask = CCLayerColor::create({255, 255, 255});
     mask->setContentSize({391, 220});
-    mask->setPosition({m_bgSprite->getContentSize().width / 2 - 391/2, m_bgSprite->getContentSize().height/2 - 220/2});
+    mask->setPosition({m_bgSprite->getContentSize().width / 2 - 391.f/2, m_bgSprite->getContentSize().height/2 - 220.f/2});
 
     m_bgSprite->setColor({50,50,50});
 

@@ -1,7 +1,9 @@
 #include <Geode/modify/LevelCell.hpp>
+#include <Geode/modify/MenuLayer.hpp>
 
 #include "../managers/SettingsManager.hpp"
 #include "../managers/ThumbnailManager.hpp"
+#include "../layers/ConfirmAlertLayer.hpp"
 
 using namespace geode::prelude;
 
@@ -172,5 +174,20 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         fields->m_fetchListener.setFilter(ThumbnailManager::get().fetchThumbnail(
             m_level->m_levelID, ThumbnailManager::Quality::Small
         ));
+    }
+};
+
+class $modify(MenuLayer){
+    bool init(){
+        MenuLayer::init();
+        // test popup
+        auto button = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_checkOff_001.png", 1, [](CCObject* sender){
+            auto confirmLayer = ConfirmAlertLayer::create("Warning!","This process is <cr>irreversible</c> and will link your accounts <cy>forever</c>!\nAre you sure you want to proceed?","No","Yes");
+            //confirmLayer->m_scene = this;
+            confirmLayer->show();
+        });
+        this->getChildByID("bottom-menu")->addChild(button);
+        this->getChildByID("bottom-menu")->updateLayout();
+        return true;
     }
 };
