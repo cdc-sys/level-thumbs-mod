@@ -2,17 +2,16 @@
 
 #include <Geode/utils/web.hpp>
 #include "../managers/ThumbnailManager.hpp"
+#include "../managers/AuthManager.hpp"
 
 using namespace geode::prelude;
 
 class ThumbnailPopup : public Popup<int> {
 protected:
-    CCSprite* m_screenshotPreview;
     std::unordered_set<Ref<CCTouch>> m_touches;
     float m_initialDistance;
     float m_initialScale;
     bool wasZooming=false;
-    bool m_isScreenshotPreview;
     CCPoint m_touchMidPoint;
     int m_levelID;
     float m_maxHeight = 220;
@@ -26,7 +25,12 @@ protected:
     Ref<CCImage> m_image;
     CCLabelBMFont* m_theFunny;
 
+    bool m_isPreview;
+    std::string m_previewFileName;
+    EventListener<AuthManager::UploadTask> m_uploadListener;
+
     void handleDownloading(ThumbnailManager::FetchTask::Event* event);
+    void handleUploading(AuthManager::UploadTask::Event* event);
     void onDownloadSuccess(Ref<CCTexture2D> const& texture);
     void onDownloadError(std::string const& error);
 
@@ -42,5 +46,5 @@ protected:
 
 public:
     static ThumbnailPopup* create(int id,bool screenshotPreview=false);
-    static ThumbnailPopup* create(int id,CCSprite* image);
+    static ThumbnailPopup* create(int id,std::string filename);
 };

@@ -1,3 +1,4 @@
+#pragma once
 #include "Geode/cocos/cocoa/CCObject.h"
 #include "Geode/cocos/label_nodes/CCLabelBMFont.h"
 #include "Geode/cocos/layers_scenes_transitions_nodes/CCLayer.h"

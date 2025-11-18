@@ -16,18 +16,35 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender){
     geode::Notification::create("Copied ID to clipboard.",nullptr)->show();
 }
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
-    createQuickPopup(
-        "No thumbnail!",
-        "This level seems to not have a <cj>Thumbnail</c>...\n"
-        "Don't worry, you can submit a thumbnail yourself! Open the level and click the thumbnail button in the pause menu.",
-        "No Thanks", "JOIN!",
-        [this](auto, bool btn2) {
-            if (btn2) {
-                CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
+    if (m_isPreview){
+        m_uploadListener.bind(this, &ThumbnailPopup::handleUploading);
+        m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName,m_levelID,true));
+    } else {
+        createQuickPopup(
+            "No thumbnail!",
+            "This level seems to not have a <cj>Thumbnail</c>...\n"
+            "Don't worry, you can submit a thumbnail yourself! Open the level and click the thumbnail button in the pause menu.",
+            "No Thanks", "JOIN!",
+            [this](auto, bool btn2) {
+                if (btn2) {
+                    CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
+                }
             }
-        }
-    );
+        );
+    }
 }
+
+void ThumbnailPopup::handleUploading(AuthManager::UploadTask::Event* event) {
+        if (auto res = event->getValue()) {
+            if (res->isOk()) {
+                FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
+            } else {
+                FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>",res->unwrapOrDefault()),"OK")->show();
+            }
+        } else if (auto progress = event->getProgress()) {
+            //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
+        }
+    }
 
 bool ThumbnailPopup::setup(int id) {
     m_noElasticity = false;
@@ -57,7 +74,7 @@ bool ThumbnailPopup::setup(int id) {
     CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
     m_downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite, this, menu_selector(ThumbnailPopup::onDownload));
     m_downloadBtn->setEnabled(true);
-    m_downloadBtn->setVisible((m_isScreenshotPreview ? false : true));
+    m_downloadBtn->setVisible((m_isPreview ? false : true));
     m_downloadBtn->setColor({125,125,125});
    
     m_downloadBtn->setPosition({m_mainLayer->getContentSize().width - 5, 5});
@@ -74,17 +91,17 @@ bool ThumbnailPopup::setup(int id) {
     recenterBtn->setVisible(false);
     #endif
 
-    ButtonSprite* infoSprite = ButtonSprite::create((m_isScreenshotPreview ? "Submit" : "What's this?"));
+    ButtonSprite* infoSprite = ButtonSprite::create((m_isPreview ? "Submit" : "What's this?"));
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
 
-    m_infoBtn->setPosition({(m_isScreenshotPreview ? 293.f : m_mainLayer->getContentSize().width/2.f), 6});
-    m_infoBtn->setVisible((m_isScreenshotPreview ? true : false));
+    m_infoBtn->setPosition({m_mainLayer->getContentSize().width/2.f, 6});
+    m_infoBtn->setVisible((m_isPreview ? true : false));
     m_infoBtn->setZOrder(3);
     m_buttonMenu->addChild(m_infoBtn);
 
     m_theFunny = CCLabelBMFont::create("OwO", "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
-    m_theFunny->setVisible((m_isScreenshotPreview ? true : false));
+    m_theFunny->setVisible((m_isPreview ? true : false));
     m_theFunny->setScale(0.25f);
 
     m_mainLayer->addChild(m_theFunny);
@@ -98,10 +115,14 @@ bool ThumbnailPopup::setup(int id) {
     cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, cocos2d::kCCMenuHandlerPriority, true);
     handleTouchPriority(this);
 
-    m_downloadListener.bind(this, &ThumbnailPopup::handleDownloading);
-    m_downloadListener.setFilter(ThumbnailManager::get().fetchThumbnail(
-        m_levelID, ThumbnailManager::Quality::High
-    ));
+    if (!m_isPreview){
+        m_downloadListener.bind(this, &ThumbnailPopup::handleDownloading);
+        m_downloadListener.setFilter(ThumbnailManager::get().fetchThumbnail(
+            m_levelID, ThumbnailManager::Quality::High
+        ));
+    } else {
+        this->onDownloadSuccess(Ref<CCTexture2D>(CCSprite::create(this->m_previewFileName.c_str())->getTexture()));
+    }
 
     return true;
 }
@@ -165,7 +186,7 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
-    ret->m_isScreenshotPreview = false;
+    ret->m_isPreview = false;
     ret->m_levelID = id;
     if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
@@ -174,10 +195,10 @@ ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
     CC_SAFE_DELETE(ret);
     return nullptr;
 }
-ThumbnailPopup* ThumbnailPopup::create(int id,CCSprite* image) {
+ThumbnailPopup* ThumbnailPopup::create(int id,std::string filename) {
     auto ret = new ThumbnailPopup();
-    ret->m_screenshotPreview = image;
-    ret->m_isScreenshotPreview = true;
+    ret->m_previewFileName = filename;
+    ret->m_isPreview = true;
     ret->m_levelID = id;
     if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();

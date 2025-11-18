@@ -1,6 +1,7 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include "../managers/SettingsManager.hpp"
 #include "../utils/RenderTexture.hpp"
+#include "../layers/ThumbnailPopup.hpp"
 
 #include <prevter.imageplus/include/api.hpp>
 
@@ -134,6 +135,10 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         // TODO: upload to server
-        file::writeBinary("TestThumbnail.webp", *res);
+        auto levelID = PlayLayer::get()->m_level->m_levelID;
+        auto saveDir = fmt::format("{}/{}.webp",Mod::get()->getSaveDir(),levelID);
+        file::writeBinary(saveDir, *res);
+        auto popup = ThumbnailPopup::create(levelID,saveDir);
+        popup->show();
     }
 };
