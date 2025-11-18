@@ -39,7 +39,7 @@ void ThumbnailPopup::handleUploading(AuthManager::UploadTask::Event* event) {
             if (res->isOk()) {
                 FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
             } else {
-                FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>",res->unwrapOrDefault()),"OK")->show();
+                FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>",res->err().value_or("")),"OK")->show();
             }
         } else if (auto progress = event->getProgress()) {
             //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
@@ -99,7 +99,7 @@ bool ThumbnailPopup::setup(int id) {
     m_infoBtn->setZOrder(3);
     m_buttonMenu->addChild(m_infoBtn);
 
-    m_theFunny = CCLabelBMFont::create("OwO", "bigFont.fnt");
+    m_theFunny = CCLabelBMFont::create((m_isPreview ? "Hiiii\ngeming\npopcorn\nskepper\nbob\nanvixo\nmoonstarmaster\ncdc\nlevel thumbnails bot\norangeyguy\ncrazytoast\nfuzzy\nkirky bonzai\nsilly billy" : "OwO"), "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
     m_theFunny->setVisible((m_isPreview ? true : false));
     m_theFunny->setScale(0.25f);

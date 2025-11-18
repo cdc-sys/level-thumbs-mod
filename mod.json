@@ -124,6 +124,12 @@
             "max": 10,
             "default":3,
             "enable-if": "level-bg-blur"
+        },
+        "link-account":{
+            "name":"Link Account",
+            "description":"acc link",
+            "type":"custom:link-account",
+            "default":{}
         }
     },
 

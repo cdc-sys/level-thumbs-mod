@@ -18,14 +18,15 @@ public:
     AuthManager& operator=(AuthManager const&) = delete;
     AuthManager& operator=(AuthManager&&) = delete;
 
+    // purely aesthetic using statements tbh
     using LoginTask = Task<geode::Result<std::string>, geode::utils::web::WebProgress>;
+    using LinkTask = Task<geode::Result<std::string>, geode::utils::web::WebProgress>;
     using UploadTask = Task<geode::Result<std::string>, geode::utils::web::WebProgress>;
-    using AuthLoginTask = Task<geode::Result<std::string>, argon::AuthProgress>;
-    AuthLoginTask getAuthTask(argon::AccountData account, bool forceStrong);
 
     bool isLoggedIn();
     LoginTask login();
     UploadTask uploadThumbnail(std::string_view filname,int levelID,bool ui=true);
+    LinkTask linkAccount(std::string linkSecret);
     
     static std::string_view getToken();
 

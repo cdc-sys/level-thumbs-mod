@@ -40,7 +40,7 @@ AuthManager::UploadTask AuthManager::uploadThumbnail(std::string_view filename,i
                 return UploadTask::immediate(Ok("The thumbnail has been submitted, and is now in the queue for approval."));
             } else {
                 geode::log::error("{}",res->errorMessage());
-                return UploadTask::immediate(Err(fmt::format("Thumbnail upload failed: {}",res->string().unwrapOr(res->errorMessage()))));
+                return UploadTask::immediate(Err(fmt::format("Thumbnail upload failed: {}",res->json().unwrapOrDefault()["message"].asString().unwrapOr(res->errorMessage()))));
             }
 
         },"LT Upload Task 2/2");
@@ -64,10 +64,56 @@ AuthManager::UploadTask AuthManager::uploadThumbnail(std::string_view filename,i
                 return UploadTask::immediate(Ok("The thumbnail has been submitted, and is now in the queue for approval."));
             } else {
                 geode::log::error("{}",res->string().unwrapOr(""));
-                return UploadTask::immediate(Err(fmt::format("Thumbnail upload failed: {}",res->string().unwrapOr(res->errorMessage()))));
+                return UploadTask::immediate(Err(fmt::format("Thumbnail upload failed: {}",res->json().unwrapOrDefault()["message"].asString().unwrapOr(res->errorMessage()))));
             }
 
         },"LT Upload Task 2/2");
+}
+
+AuthManager::LinkTask AuthManager::linkAccount(std::string linkSecret){
+    geode::log::info("{}",linkSecret);
+    if (!this->isLoggedIn()){
+        return AuthManager::login()
+        .chain([this,linkSecret](geode::Result<std::string>* res) -> web::WebTask {
+            auto linkReq = web::WebRequest();
+            auto token = Mod::get()->getSavedValue<std::string>("token");
+
+            linkReq.header("Authorization",fmt::format("Bearer {}",token));
+            auto body = matjson::makeObject({{"token",linkSecret}});
+            linkReq.bodyJSON(body);
+
+            return linkReq.post(fmt::format("{}/auth/link",Settings::thumbnailAPIBaseURL()));
+        },"LT Link Task 1/2")
+        .chain([](web::WebResponse* res) -> LinkTask {
+            if (res->ok()){
+                auto token = res->json().unwrapOrDefault()["token"].asString().unwrapOrDefault();
+                Mod::get()->setSavedValue<std::string>("token", token);
+                return LinkTask::immediate(Ok("Your account was linked successfully."));
+            } else {
+                return LinkTask::immediate(Err(fmt::format("Account link failed: {}",res->json().unwrapOrDefault()["message"].asString().unwrapOr(res->errorMessage()))));
+            }
+
+        },"LT Link Task 2/2");
+    } else {
+        auto linkReq = web::WebRequest();
+        auto token = Mod::get()->getSavedValue<std::string>("token");
+
+        linkReq.header("Authorization",fmt::format("Bearer {}",token));
+        auto body = matjson::makeObject({{"token",linkSecret}});
+        linkReq.bodyJSON(body);
+
+        return linkReq.post(fmt::format("{}/auth/link",Settings::thumbnailAPIBaseURL()))
+        .chain([](web::WebResponse* res) -> LinkTask {
+            if (res->ok()){
+                auto token = res->json().unwrapOrDefault()["token"].asString().unwrapOrDefault();
+                Mod::get()->setSavedValue<std::string>("token", token);
+                return LinkTask::immediate(Ok("Your account was linked successfully."));
+            } else {
+                return LinkTask::immediate(Err(fmt::format("Account link failed: {}",res->json().unwrapOrDefault()["message"].asString().unwrapOr(res->errorMessage()))));
+            }
+
+        },"LT Link Task 2/2");
+    }
 }
 
 AuthManager::LoginTask AuthManager::login(){
