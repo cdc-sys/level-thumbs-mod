@@ -82,7 +82,7 @@ AuthManager::LoginTask AuthManager::login(){
             }
             auto token = res->unwrapOr("");
             auto loginReq = web::WebRequest();
-            auto body = matjson::makeObject({{"account_id",accID},{"user_id",userID},{"username",matjson::Value(username)},{"argon_token",token}});
+            auto body = matjson::makeObject({{"account_id",accID},{"user_id",userID},{"username",std::string(username)},{"argon_token",token}});
             loginReq.bodyJSON(body);
             return loginReq.post(fmt::format("{}/auth/login",Settings::thumbnailAPIBaseURL()));
         },"LT Login Task 1/2")
