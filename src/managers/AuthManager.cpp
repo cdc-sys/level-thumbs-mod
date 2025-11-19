@@ -47,7 +47,7 @@ AuthManager::UploadTask AuthManager::uploadThumbnail(std::string_view filename,i
         },"LT Upload Task 1/2")
         .chain([this,load](web::WebResponse* res) -> UploadTask {
             load->fadeOut();
-            if (res->code() == 200||res->code() == 200) {
+            if (res->code() == 201||res->code() == 200) {
                 return UploadTask::immediate(Ok("The thumbnail has been applied."));
             } else if (res->code() == 202) {
                 return UploadTask::immediate(Ok("The thumbnail has been submitted, and is now in the queue for approval."));

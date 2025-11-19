@@ -92,7 +92,7 @@ protected:
             
         });
         m_linkTokenInput = TextInput::create(150,"Link secret...","bigFont.fnt");
-        m_linkTokenInput->setFilter("QWERTYUIOPASDFGHJKLZXCVBNMqweryuiopasdfghjklzxcvbnm1234567890_-.");
+        m_linkTokenInput->setFilter("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890_-.");
         
         this->getButtonMenu()->addChild(m_linkTokenInput);
         this->getButtonMenu()->addChild(linkButton);
