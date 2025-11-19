@@ -1,8 +1,11 @@
-# SUBMIT THUMBNAILS IN THE [DISCORD SERVER](https://discord.gg/GuagJDsqds)
-
 # Level Thumbnails
 
 **Level Thumbnails** is a mod that adds thumbnails to levels in search.
+
+## Thumbnail Submission
+
+To submit thumbnails, go to **settings** and toggle "In-Game Thumbnail Taking."<br>
+Then take a thumbnail using the **Level Thumbnails** button in the **pause menu**.
 
 # Credits
 

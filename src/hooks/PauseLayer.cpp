@@ -75,6 +75,10 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
         auto uiLayerVisible = playLayer->m_uiLayer->isVisible();
         playLayer->m_uiLayer->setVisible(false);
+        auto percentage = playLayer->m_percentageLabel->isVisible();
+        playLayer->m_percentageLabel->setVisible(false);
+        auto progressBarVisible = playLayer->m_progressBar->isVisible();
+        playLayer->m_progressBar->setVisible(false);
 
         auto shader = playLayer->m_shaderLayer;
         bool hadShader = shader->getParent() != nullptr;
@@ -117,6 +121,8 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
 
         playLayer->setScaleY(oldScale);
         playLayer->m_uiLayer->setVisible(uiLayerVisible);
+        playLayer->m_percentageLabel->setVisible(percentage);
+        playLayer->m_progressBar->setVisible(progressBarVisible);
         revertUIObjects(playLayer, uiObjects);
         if (hadShader) {
             shader->m_screenSize = oldScreenSize;

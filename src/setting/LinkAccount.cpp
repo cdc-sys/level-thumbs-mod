@@ -4,6 +4,7 @@
 #include <Geode/loader/SettingV3.hpp>
 #include <Geode/loader/Mod.hpp>
 #include "../managers/AuthManager.hpp"
+#include "../layers/ConfirmAlertLayer.hpp"
 
 using namespace geode::prelude;
 
@@ -67,6 +68,7 @@ protected:
 
     void handleLinking(AuthManager::LinkTask::Event* event){
         if (auto res = event->getValue()) {
+            // run on next frame to prevent a race condition from happening and breaking the entire touch system (??????????????/
             if (res->isOk()) {
                 FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
             } else {
@@ -81,10 +83,16 @@ protected:
             return false;
 
         auto linkButton = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Link"),[this](auto self){
-            m_linkListener.bind(this, &MyCustomSettingNodeV3::handleLinking);
-            m_linkListener.setFilter(AuthManager::get().linkAccount(m_linkTokenInput->getString()));
+            ConfirmAlertLayer::create([this](bool btn2){
+                if (btn2){
+                    m_linkListener.bind(this, &MyCustomSettingNodeV3::handleLinking);
+                    m_linkListener.setFilter(AuthManager::get().linkAccount(m_linkTokenInput->getString()));
+                }
+            },"Warning!","This process is <cr>irreversible</c> and will link your accounts <cy>forever</c>!\nAre you sure you want to proceed?","No","Yes")->show();
+            
         });
-        m_linkTokenInput = TextInput::create(150,"Link secret...","chatFont.fnt");
+        m_linkTokenInput = TextInput::create(150,"Link secret...","bigFont.fnt");
+        m_linkTokenInput->setFilter("QWERTYUIOPASDFGHJKLZXCVBNMqweryuiopasdfghjklzxcvbnm1234567890_-.");
         
         this->getButtonMenu()->addChild(m_linkTokenInput);
         this->getButtonMenu()->addChild(linkButton);

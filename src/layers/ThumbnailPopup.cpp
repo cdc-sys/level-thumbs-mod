@@ -1,3 +1,4 @@
+#include "Geode/cocos/textures/CCTextureCache.h"
 #include <Geode/Geode.hpp>
 
 using namespace geode::prelude;
@@ -121,6 +122,7 @@ bool ThumbnailPopup::setup(int id) {
             m_levelID, ThumbnailManager::Quality::High
         ));
     } else {
+        CCTextureCache::get()->removeTextureForKey(this->m_previewFileName.c_str());
         this->onDownloadSuccess(Ref<CCTexture2D>(CCSprite::create(this->m_previewFileName.c_str())->getTexture()));
     }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "Geode/cocos/CCDirector.h"
 #include "Geode/cocos/cocoa/CCObject.h"
 #include "Geode/cocos/label_nodes/CCLabelBMFont.h"
 #include "Geode/cocos/layers_scenes_transitions_nodes/CCLayer.h"
@@ -30,8 +31,12 @@ class ConfirmAlertLayer : public CCLayerColor {
 	float m_timer = 10;
 	bool m_understood = false;
 	CCLabelBMFont* m_buttonTimer;
+
+	std::function<void(bool)> m_callback;
 	inline void sendAndCleanup(bool alert) {
+		m_callback(alert);
 		//CCDirector::sharedDirector()->getTouchDispatcher()->setForcePrio(false);
+		//CCDirector::sharedDirector()->getTouchDispatcher()->unregisterForcePrio(this);
 		removeFromParentAndCleanup(true);
 		setTouchEnabled(false);
 		setKeypadEnabled(false);
@@ -44,8 +49,8 @@ class ConfirmAlertLayer : public CCLayerColor {
 		float checkboxMargin = 20;
 		
 		// handle touch prio
-		cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
-		this->registerWithTouchDispatcher();
+		//cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
+		//this->registerWithTouchDispatcher();
 		
 		//this->setTouchPriority(-999);
 		handleTouchPriority(this,true);
@@ -125,26 +130,6 @@ class ConfirmAlertLayer : public CCLayerColor {
 
 		m_buttonMenu->setPosition(CCPointMake(windowSize.width * 0.5, (windowSize.height - height) * 0.5 + 30.0 - checkboxMargin/2));
 
-		// TODO: implement this
-		//PlatformToolbox::isControllerConnected
-		if (PlatformToolbox::isControllerConnected()) {
-			auto nodeConvert1 = m_mainLayer->convertToNodeSpace(CCPointMake(windowSize.width*0.5, windowSize.height*0.5));
-			auto nodeConvert2 = m_buttonMenu->convertToWorldSpace(button2Menu->getPosition());
-			nodeConvert2 = m_mainLayer->convertToNodeSpace(nodeConvert2);
-
-			auto midConvert = CCPointMake(nodeConvert1.x, nodeConvert2.y);
-
-			auto controllerBSprite = CCSprite::createWithSpriteFrameName("controllerBtn_B_001.png");
-			m_mainLayer->addChild(controllerBSprite, 10);
-			controllerBSprite->setPosition(midConvert + CCPointMake(-116.0, 0.0));
-
-			auto controllerXSprite = CCSprite::createWithSpriteFrameName("controllerBtn_X_001.png");
-			m_mainLayer->addChild(controllerXSprite, 10);
-			controllerXSprite->setPosition(midConvert + CCPointMake(116.0, 0.0));
-		}
-
-		m_controlConnected = -1;
-
 		// timed label implementation thing
 		auto readThisMenu = CCMenu::create();
 		
@@ -216,43 +201,7 @@ class ConfirmAlertLayer : public CCLayerColor {
 		}
 	}
 	bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
-		if (m_buttonMenu) {
-			if (m_controlConnected == -1 && m_buttonMenu->ccTouchBegan(touch, event)) {
-				m_controlConnected = touch->getID();
-			}
-		}
-		else if (m_scrollingLayer) {
-			if (m_joystickConnected == -1 && m_scrollingLayer->ccTouchBegan(touch, event)) {
-				m_joystickConnected = touch->getID();
-			}
-		}
 		return true;
-	}
-	void ccTouchMoved(CCTouch* touch, CCEvent* event) override {
-		if (m_controlConnected == touch->getID()) {
-			m_buttonMenu->ccTouchMoved(touch, event);
-		}
-		else if (m_joystickConnected == touch->getID()) {
-			m_scrollingLayer->ccTouchMoved(touch, event);
-		}
-	}
-	void ccTouchEnded(CCTouch* touch, CCEvent* event) override {
-		if (m_controlConnected == touch->getID()) {
-			m_buttonMenu->ccTouchEnded(touch, event);
-			m_controlConnected = -1;
-		}
-		else if (m_joystickConnected == touch->getID()) {
-			m_scrollingLayer->ccTouchEnded(touch, event);
-			m_joystickConnected = -1;
-		}
-	}
-	void ccTouchCancelled(CCTouch* touch, CCEvent* event) override {
-		if (m_controlConnected == touch->getID()) {
-			m_buttonMenu->ccTouchCancelled(touch, event);
-		}
-		else if (m_joystickConnected == touch->getID()) {
-			m_scrollingLayer->ccTouchCancelled(touch, event);
-		}
 	}
 	void keyBackClicked() override {
 		setKeypadEnabled(false);
@@ -276,14 +225,15 @@ class ConfirmAlertLayer : public CCLayerColor {
 
 	public:
 	CCNode* m_scene = nullptr;
-	static ConfirmAlertLayer* create(char const* title, gd::string caption, char const* button1, char const* button2) {
-		return create(title, caption, button1, button2, 350.0, false, 0.0);
+	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2) {
+		return create(callback,title, caption, button1, button2, 350.0, false, 0.0);
 	}
-	static ConfirmAlertLayer* create(char const* title, gd::string caption, char const* button1, char const* button2, float width) {
-		return create(title, caption, button1, button2, width, false, 0.0);
+	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width) {
+		return create(callback, title, caption, button1, button2, width, false, 0.0);
 	}
-	static ConfirmAlertLayer* create(char const* title, gd::string caption, char const* button1, char const* button2, float width, bool border, float height) {
+	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width, bool border, float height) {
 		auto ret = new ConfirmAlertLayer(); 
+		ret->m_callback = callback;
 		if (ret && ret->init(title, caption, button1, button2, width, border, height)) {
 			ret->autorelease();
 			return ret;

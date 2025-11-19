@@ -1,3 +1,7 @@
+# v2.0.0
+- Full mod rewrite (credits to Prevter)
+- In-game thumbnail submission!
+
 # v1.3.0
 - Added 'Level thumbnails url' setting
 - Added displaying thumbnails as the background in LevelInfoLayer.
