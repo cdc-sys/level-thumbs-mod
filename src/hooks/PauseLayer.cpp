@@ -2,6 +2,7 @@
 #include "../managers/SettingsManager.hpp"
 #include "../utils/RenderTexture.hpp"
 #include "../layers/ThumbnailPopup.hpp"
+#include "Geode/cocos/textures/CCTexture2D.h"
 
 #include <prevter.imageplus/include/api.hpp>
 
@@ -22,7 +23,6 @@ static std::vector<UIObjectState> fixUIObjects(PlayLayer* pl) {
         if (it == pl->m_uiObjectPositions.end()) continue;
         uiObjects.push_back({obj, obj->m_startPosition, it->second, obj->getPosition()});
         obj->setStartPos(it->second);
-        // obj->m_startPosition = it->second;
     }
 
     pl->positionUIObjects();
@@ -32,7 +32,6 @@ static std::vector<UIObjectState> fixUIObjects(PlayLayer* pl) {
 
 static void revertUIObjects(PlayLayer* pl, std::vector<UIObjectState> const& uiObjects) {
     for (auto const& state : uiObjects) {
-        // state.object->m_startPosition = state.oldStartPos;
         state.object->setStartPos(state.oldStartPos);
         state.object->setPosition(state.position);
     }
@@ -86,7 +85,10 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
 
         std::vector<UIObjectState> uiObjects;
         std::unique_ptr<uint8_t[]> data;
+        bool pixelateHardEdges = false;
         {
+            auto oldWinSize = CCDirector::get()->getWinSize();
+
             RenderTexture rt(1920, 1080);
             rt.begin();
 
@@ -101,10 +103,16 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             uiObjects = fixUIObjects(playLayer);
 
             if (hadShader) {
-                // fix the shader layer
+                // fix shaderlayer
+                pixelateHardEdges = shader->m_state.m_pixelateHardEdges;
                 oldScreenSize = shader->m_screenSize;
                 shader->m_screenSize = newWinSize;
                 shader->setupShader(false);
+                if (!pixelateHardEdges) {
+                    ccTexParams a = {GL_LINEAR,GL_LINEAR};
+                    shader->m_sprite->getTexture()->setTexParameters(&a);
+                }
+                shader->prePixelateShader();
                 playLayer->updateShaderLayer(0.f);
             }
 
@@ -127,6 +135,11 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         if (hadShader) {
             shader->m_screenSize = oldScreenSize;
             shader->setupShader(false);
+            if (!pixelateHardEdges) {
+                    ccTexParams a = {GL_LINEAR,GL_LINEAR};
+                    shader->m_sprite->getTexture()->setTexParameters(&a);
+                }
+            shader->prePixelateShader();
         }
 
         if (!data) {
