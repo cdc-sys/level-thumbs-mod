@@ -48,7 +48,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         auto playLayer = PlayLayer::get();
-        if (!playLayer || !playLayer->m_level || playLayer->m_level->m_levelID <= 0) {
+        if (!playLayer || !playLayer->m_level || playLayer->m_level->m_levelID < 50) {
             return;
         }
 
