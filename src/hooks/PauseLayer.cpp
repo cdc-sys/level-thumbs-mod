@@ -4,6 +4,21 @@
 #include "../layers/ThumbnailPopup.hpp"
 #include "Geode/cocos/textures/CCTexture2D.h"
 
+// src: https://github.com/RayDeeUx/PRNTSCRN-CONTINUD/blob/main/src/SharedScreenshotLogic.hpp
+#define HIDE_NODE(parent, val) \
+	if (parent) { \
+		if (auto node = parent->getChildByID(#val); node) { \
+			uiNodes[#val] = node->isVisible(); \
+			node->setVisible(false); \
+		}\
+	}
+#define RESTORE_NODE(parent, val) \
+	if (parent) { \
+		if (auto node = parent->getChildByID(#val); node) { \
+			parent->getChildByID(#val)->setVisible(uiNodes[#val]); \
+		} \
+	}
+
 #include <prevter.imageplus/include/api.hpp>
 
 using namespace geode::prelude;
@@ -69,6 +84,21 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         if (!playLayer) {
             return;
         }
+        std::unordered_map<const char*, bool> uiNodes = {};
+        HIDE_NODE(playLayer, mat.run-info/RunInfoWidget);
+		HIDE_NODE(playLayer, cheeseworks.speedruntimer/timer);
+		HIDE_NODE(playLayer, sawblade.dim_mode/opacityLabel);
+		HIDE_NODE(playLayer, zilko.xdbot/state-label);
+		HIDE_NODE(playLayer, zilko.xdbot/frame-label);
+		HIDE_NODE(playLayer, zilko.xdbot/recording-audio-label);
+		HIDE_NODE(playLayer, zilko.xdbot/button-menu);
+		HIDE_NODE(playLayer, dankmeme.globed2/game-overlay);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_top_left);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_top_right);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom_left);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom_right);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom);
+		HIDE_NODE(playLayer, tobyadd.gdh/labels_top);
 
         auto oldScale = playLayer->getScaleY();
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
@@ -141,6 +171,20 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
                 }
             shader->prePixelateShader();
         }
+        RESTORE_NODE(playLayer, mat.run-info/RunInfoWidget);
+		RESTORE_NODE(playLayer, cheeseworks.speedruntimer/timer);
+		RESTORE_NODE(playLayer, sawblade.dim_mode/opacityLabel);
+		RESTORE_NODE(playLayer, zilko.xdbot/state-label);
+		RESTORE_NODE(playLayer, zilko.xdbot/frame-label);
+		RESTORE_NODE(playLayer, zilko.xdbot/recording-audio-label);
+		RESTORE_NODE(playLayer, zilko.xdbot/button-menu);
+		RESTORE_NODE(playLayer, dankmeme.globed2/game-overlay);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top_left);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top_right);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom_left);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom_right);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom);
+		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top);
 
         if (!data) {
             log::error("Failed to take screenshot: could not get pixel data");
