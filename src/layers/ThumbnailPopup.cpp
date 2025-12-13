@@ -27,7 +27,7 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender){
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
     if (m_isPreview){
         createQuickPopup("Confirmation","Are you sure you want to submit?","No","Yes",[this](auto,bool btn2){
-            if (!Mod::get()->getSavedValue<bool>("showed-rules")){
+            if (!Mod::get()->getSavedValue<bool>("showed-rules") && btn2){
                 auto rules = ConfirmAlertLayer::createRulesPopup([this](bool btn2){
                     if (btn2) {
                         runSubmissionLogic();
