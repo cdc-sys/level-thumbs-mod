@@ -1,4 +1,6 @@
+#include "ConfirmAlertLayer.hpp"
 #include "Geode/cocos/textures/CCTextureCache.h"
+#include "Geode/ui/Popup.hpp"
 #include <Geode/Geode.hpp>
 
 using namespace geode::prelude;
@@ -18,8 +20,17 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender){
 }
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
     if (m_isPreview){
-        m_uploadListener.bind(this, &ThumbnailPopup::handleUploading);
-        m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName,m_levelID,true));
+        createQuickPopup("Confirmation","Are you sure you want to submit?","No","Yes",[this](auto,bool btn2){
+            if (!Mod::get()->getSavedValue<bool>("showed-rules")){
+                auto rules = ConfirmAlertLayer::createRulesPopup([this](bool btn2){
+                    runSubmissionLogic();
+                    Mod::get()->setSavedValue<bool>("showed-rules", true);
+                },"Submission Rules","submission_rules.md","OK","Submit");
+                rules->show();
+            } else {
+                runSubmissionLogic();
+            }   
+        }); 
     } else {
         createQuickPopup(
             "No thumbnail!",
@@ -33,6 +44,10 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
             }
         );
     }
+}
+void ThumbnailPopup::runSubmissionLogic(){
+    m_uploadListener.bind(this, &ThumbnailPopup::handleUploading);
+    m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName,m_levelID,true));
 }
 
 void ThumbnailPopup::handleUploading(AuthManager::UploadTask::Event* event) {
@@ -108,8 +123,10 @@ bool ThumbnailPopup::setup(int id) {
     m_mainLayer->addChild(m_theFunny);
 
     m_loadingCircle->setParentLayer(m_mainLayer);
-    m_loadingCircle->setPosition({ -70,-40 });
+    m_loadingCircle->setPosition({m_mainLayer->getContentWidth()/2,m_mainLayer->getContentHeight()/2});
+    m_loadingCircle->setAnchorPoint({0.5,0.5});
     m_loadingCircle->setScale(1.f);
+    m_loadingCircle->ignoreAnchorPointForPosition(false);
     m_loadingCircle->show();
 
     this->setTouchEnabled(true);

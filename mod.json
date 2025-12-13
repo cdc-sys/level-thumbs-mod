@@ -20,6 +20,9 @@
         "sprites": [
             "resources/thumbnailButton.png",
             "resources/noThumb.png"
+        ],
+        "files":[
+            "resources/submission_rules.md"
         ]
     },
 

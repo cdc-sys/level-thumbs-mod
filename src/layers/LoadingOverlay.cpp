@@ -1,4 +1,5 @@
 #include "LoadingOverlay.hpp"
+#include "Geode/cocos/CCDirector.h"
 void LoadingOverlay::show() {
     auto scene = CCDirector::sharedDirector()->getRunningScene();
     layerColor->runAction(
@@ -60,9 +61,12 @@ bool LoadingOverlay::init() {
     this->registerWithTouchDispatcher();
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
-    this->setTouchPriority(-9999);
+    //this->setTouchPriority(-9999);
     this->setZOrder(CCDirector::get()->getRunningScene()->getHighestChildZ()+1);
+    //CCDirector::sharedDirector()
     // CCDirector::sharedDirector()->getTouchDispatcher()->registerForcePrio(this,-9999);
+    cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
+	handleTouchPriority(this,true);
 
     // this->handler
     loadingCircle = LoadingCircle::create();

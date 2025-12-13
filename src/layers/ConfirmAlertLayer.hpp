@@ -4,7 +4,9 @@
 #include "Geode/cocos/label_nodes/CCLabelBMFont.h"
 #include "Geode/cocos/layers_scenes_transitions_nodes/CCLayer.h"
 #include "Geode/cocos/menu_nodes/CCMenuItem.h"
+#include "Geode/ui/MDTextArea.hpp"
 #include "Geode/utils/cocos.hpp"
+#include "Geode/utils/file.hpp"
 #include <Geode/Geode.hpp>
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 
@@ -14,13 +16,15 @@ using namespace cocos2d;
 using namespace cocos2d::extension;
 
 class ConfirmAlertLayer : public CCLayerColor {
+	bool m_scrollable;
+	std::string m_filePath;
 	CCMenu* m_buttonMenu = nullptr;
 	int m_controlConnected = -1;
 	CCLayer* m_mainLayer = nullptr;
 	int m_ZOrder = 0;
 	bool m_noElasticity = false;
 	bool m_reverseKeyBack = false;
-	CCLayer* m_scrollingLayer = nullptr;
+	ScrollingLayer* m_scrollingLayer = nullptr;
 	ButtonSprite* m_button2 = nullptr;
 	ButtonSprite* m_button1 = nullptr;
 	CCMenuItemSpriteExtra* m_button1Extra = nullptr;
@@ -49,7 +53,7 @@ class ConfirmAlertLayer : public CCLayerColor {
 		float checkboxMargin = 20;
 		
 		// handle touch prio
-		//cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
+		cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
 		//this->registerWithTouchDispatcher();
 		
 		//this->setTouchPriority(-999);
@@ -66,22 +70,24 @@ class ConfirmAlertLayer : public CCLayerColor {
 		addChild(m_mainLayer);
 
 		TextArea* textArea;
+		MDTextArea* markdownTextArea;
 		if (!m_containsBorder) {
-			textArea = TextArea::create(caption, "chatFont.fnt", 1.0, width - 60.0, CCPointMake(0.5, 0.5), 20.0, false);
-			m_mainLayer->addChild(textArea, 3);
-			height = textArea->m_obRect.size.height + 120;
-			height = std::max(height, 140.0f);
-		}
-		// honestly this is there but not added anywhere what
-		// auto layerColor = CCLayerColor::create(ccc4(0,0,0,255), width, height);
-		// auto layerColorPos = CCPointMake(windowSize.width - width, windowSize.height - height) * 0.5;
-		// layerColor->setPosition(layerColorPos);
-		// layerColor->setVisible(false);
+			if (!m_scrollable){
+				textArea = TextArea::create(caption, "chatFont.fnt", 1.0, width - 60.0, CCPointMake(0.5, 0.5), 20.0, false);
+				m_mainLayer->addChild(textArea, 3);
+				height = textArea->m_obRect.size.height + 120;
+				height = std::max(height, 140.0f);
+			} else {
+				auto fileop = file::readString(Mod::get()->getResourcesDir()/m_filePath.c_str());
+    			std::string caption = fileop.unwrapOrDefault();
 
-		// auto layerColor2 = CCLayerColor::create(ccc4(150,150,150,255), width + 16, height + 16);
-		// auto layerColor2Pos = layerColorPos - CCPointMake(8, 8);
-		// layerColor2->setPosition(layerColor2Pos);
-		// layerColor2->setVisible(false);
+				markdownTextArea = MDTextArea::create(caption,{width - 60.f,100.f
+				});
+				m_mainLayer->addChild(markdownTextArea,3);
+				height = markdownTextArea->getContentHeight() + 120;
+				height = std::max(height,140.f);
+			}
+		}
 
 		auto scale9 = CCScale9Sprite::create("square01_001.png", CCRectMake(0, 0, 94, 94));
 		scale9->setContentSize(CCSizeMake(width, height+checkboxMargin));
@@ -96,7 +102,8 @@ class ConfirmAlertLayer : public CCLayerColor {
 		m_mainLayer->addChild(titleText, 3);
 
 		if (!m_containsBorder) {
-			textArea->setPosition(scale9Pos + CCPointMake(0, 5 + checkboxMargin/2));
+			if (!m_scrollable) textArea->setPosition(scale9Pos + CCPointMake(0, 5 + checkboxMargin/2));
+			else markdownTextArea->setPosition(scale9Pos + CCPointMake(0, 5 + checkboxMargin/2));
 		}
 
 		m_buttonMenu = CCMenu::create();
@@ -133,7 +140,9 @@ class ConfirmAlertLayer : public CCLayerColor {
 		// timed label implementation thing
 		auto readThisMenu = CCMenu::create();
 		
-		auto readThisLabel = CCLabelBMFont::create("I understand the consequences of this action.","bigFont.fnt");
+		std::string readThisText = "I understand the consequences of this action.";
+		if (m_scrollable) readThisText = "I have read and understood the rules.";
+		auto readThisLabel = CCLabelBMFont::create(readThisText.c_str(),"bigFont.fnt");
 		auto readThisToggle = CCMenuItemExt::createToggler(CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png"),[this](CCObject* sender){
 			m_understood = !m_understood;
 		});
@@ -152,6 +161,8 @@ class ConfirmAlertLayer : public CCLayerColor {
 
 		m_mainLayer->addChild(readThisMenu);
 		readThisMenu->setZOrder(1); // this is stupid, and stupid, and stupid
+
+		if (m_scrollable) m_timer = 30;
 
 		this->scheduleUpdate();
 
@@ -231,9 +242,14 @@ class ConfirmAlertLayer : public CCLayerColor {
 	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width) {
 		return create(callback, title, caption, button1, button2, width, false, 0.0);
 	}
-	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width, bool border, float height) {
+	static ConfirmAlertLayer* createRulesPopup(std::function<void(bool)> callback,char const* title, std::string filePath, char const* button1, char const* button2) {
+		return create(callback,title, "", button1, button2, 350.0, false, 0.0,true,filePath);
+	}
+	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width, bool border, float height,bool scrollable=false,std::string filePath="") {
 		auto ret = new ConfirmAlertLayer(); 
 		ret->m_callback = callback;
+		ret->m_scrollable = scrollable;
+		ret->m_filePath = filePath;
 		if (ret && ret->init(title, caption, button1, button2, width, border, height)) {
 			ret->autorelease();
 			return ret;

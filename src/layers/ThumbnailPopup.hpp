@@ -29,6 +29,8 @@ protected:
     std::string m_previewFileName;
     EventListener<AuthManager::UploadTask> m_uploadListener;
 
+    void runSubmissionLogic();
+
     void handleDownloading(ThumbnailManager::FetchTask::Event* event);
     void handleUploading(AuthManager::UploadTask::Event* event);
     void onDownloadSuccess(Ref<CCTexture2D> const& texture);
