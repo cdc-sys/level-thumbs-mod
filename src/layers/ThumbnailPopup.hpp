@@ -17,10 +17,12 @@ protected:
     float m_maxHeight = 220;
 
     EventListener<ThumbnailManager::FetchTask> m_downloadListener;
+    EventListener<web::WebTask> m_infoListener;
 
     LoadingCircle* m_loadingCircle = LoadingCircle::create();
     CCMenuItemSpriteExtra* m_downloadBtn;
     CCMenuItemSpriteExtra* m_infoBtn;
+    CCMenuItemToggler* m_thumbInfoBtn;
     CCClippingNode* m_clippingNode;
     Ref<CCImage> m_image;
     CCLabelBMFont* m_theFunny;
@@ -33,6 +35,7 @@ protected:
 
     void handleDownloading(ThumbnailManager::FetchTask::Event* event);
     void handleUploading(AuthManager::UploadTask::Event* event);
+    void loadThumbnailInfo();
     void onDownloadSuccess(Ref<CCTexture2D> const& texture);
     void onDownloadError(std::string const& error);
 

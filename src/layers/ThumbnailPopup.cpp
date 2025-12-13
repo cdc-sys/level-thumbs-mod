@@ -1,7 +1,13 @@
 #include "ConfirmAlertLayer.hpp"
+#include "GUI/CCControlExtension/CCScale9Sprite.h"
 #include "Geode/cocos/textures/CCTextureCache.h"
+#include "Geode/ui/LoadingSpinner.hpp"
 #include "Geode/ui/Popup.hpp"
+#include "Geode/ui/TextArea.hpp"
+#include "LoadingOverlay.hpp"
 #include <Geode/Geode.hpp>
+#include <fmt/format.h>
+#include <chrono>
 
 using namespace geode::prelude;
 
@@ -97,6 +103,20 @@ bool ThumbnailPopup::setup(int id) {
 
     m_buttonMenu->addChild(m_downloadBtn);
 
+    CCSprite* infoBtn = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
+    CCSprite* infoBtnDark = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
+    infoBtnDark->setColor({100,100,100});
+    m_thumbInfoBtn = CCMenuItemExt::createToggler(infoBtnDark,infoBtn,[this](auto self){
+        this->m_mainLayer->getChildByID("thumbnail-info")->setVisible(!self->isOn());
+        Mod::get()->setSavedValue<bool>("show-info", !self->isOn());
+    });
+    m_thumbInfoBtn->toggle(Mod::get()->getSavedValue<bool>("show-info"));
+    m_thumbInfoBtn->setVisible((m_isPreview ? false : true));
+   
+    m_thumbInfoBtn->setPosition({m_mainLayer->getContentSize().width - 5, 220});
+
+    m_buttonMenu->addChild(m_thumbInfoBtn);
+
     CCSprite* recenterSprite = CCSprite::createWithSpriteFrameName("GJ_undoBtn_001.png");
     CCMenuItemSpriteExtra* recenterBtn = CCMenuItemSpriteExtra::create(recenterSprite, this, menu_selector(ThumbnailPopup::recenter));
 
@@ -138,6 +158,7 @@ bool ThumbnailPopup::setup(int id) {
         m_downloadListener.setFilter(ThumbnailManager::get().fetchThumbnail(
             m_levelID, ThumbnailManager::Quality::High
         ));
+        this->loadThumbnailInfo();
     } else {
         CCTextureCache::get()->removeTextureForKey(this->m_previewFileName.c_str());
         this->onDownloadSuccess(Ref<CCTexture2D>(CCSprite::create(this->m_previewFileName.c_str())->getTexture()));
@@ -201,6 +222,65 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
     m_clippingNode->addChild(image);
     m_loadingCircle->fadeAndRemove();
 
+}
+
+void ThumbnailPopup::loadThumbnailInfo(){
+    auto req = web::WebRequest();
+    m_infoListener.setFilter(req.get(fmt::format("{}/thumbnail/{}/info",Settings::thumbnailAPIBaseURL(),m_levelID)));
+    
+    SimpleTextArea* textArea = SimpleTextArea::create("Loading info...");
+    textArea->setAnchorPoint({0,0});
+    textArea->setPosition({5,5});
+    textArea->setScale(0.7);
+    textArea->setVisible(false);
+
+    LoadingSpinner* loader = LoadingSpinner::create(45.f/2);
+    loader->setAnchorPoint({0,0});
+    loader->setPosition({2.5f,2.5f});
+
+    CCScale9Sprite* bg = CCScale9Sprite::create("square02b_001.png");
+    bg->setColor({0,0,0});
+    bg->setOpacity(120);
+    bg->setScale(0.5);
+    //bg->setContentWidth(textArea->getScaledContentWidth()+10*2);
+    //bg->setContentHeight(textArea->getScaledContentHeight()+10*2);
+    bg->setContentWidth(55);
+    bg->setContentHeight(55);
+    bg->setAnchorPoint({0,0});
+
+    CCNode* container = CCNode::create();
+    container->setID("thumbnail-info");
+    container->setAnchorPoint({0,0});
+    container->setPosition({10,10});
+    container->setZOrder(100);
+
+    container->addChild(bg);
+    container->addChild(textArea);
+    container->addChild(loader);
+    
+    container->setVisible(Mod::get()->getSavedValue<bool>("show-info"));
+
+    this->m_mainLayer->addChild(container);
+    m_infoListener.bind([textArea,container,bg,loader](web::WebTask::Event* e){
+        if (auto res = e->getValue()) {
+            if (res->ok()){
+                auto json = res->json().unwrapOrDefault();
+                std::string uploader = json["username"].asString().unwrapOr("Unknown");
+                std::string upload_time = json["upload_time"].asString().unwrapOr("Unknown");
+                std::string first_upload_time = json["first_upload_time"].asString().unwrapOr("Unknown");
+                std::string accepted_time = json["accepted_time"].asString().unwrapOr("Unknown");
+                std::string accepter = json["accepted_by_username"].asString().unwrapOr("Unknown");
+                
+                textArea->setVisible(true);
+                textArea->setText(fmt::format("Submitted by: {}\nSubmitted at: {}\nFirst submitted at: {}\nAccepted by: {}\nAccepted at: {}",uploader,upload_time,first_upload_time,accepter,accepted_time));
+                bg->setContentWidth((textArea->getScaledContentWidth()+10)*2);
+                bg->setContentHeight((textArea->getScaledContentHeight()+10)*2);
+                loader->removeFromParent();
+            } else{
+                container->setVisible(false);
+            }
+        }
+    });
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
