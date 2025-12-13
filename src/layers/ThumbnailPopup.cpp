@@ -254,6 +254,7 @@ void ThumbnailPopup::loadThumbnailInfo(){
     container->setID("thumbnail-info");
     container->setAnchorPoint({0,0});
     container->setPosition({10,10});
+    m_buttonMenu->setZOrder(99);
     container->setZOrder(100);
 
     container->addChild(bg);
