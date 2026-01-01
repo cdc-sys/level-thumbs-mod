@@ -168,7 +168,8 @@ class $modify(ThumbnailLevelCell, LevelCell) {
             return;
         }
         // Don't render thumbnails if Enable Thumbnail Limit In Lists is enabled & this cell exceeds limit
-        if (Settings::listsLimitEnabled() && this->m_tableView->m_cellArray->count() >= Settings::listsLevelsLimit()) {
+        auto tableView = this->m_tableView;
+        if (Settings::listsLimitEnabled() && (tableView && tableView->m_cellArray->count() >= Settings::listsLevelsLimit())) {
             return;
         }
 
