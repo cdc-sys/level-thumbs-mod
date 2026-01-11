@@ -51,8 +51,7 @@ private:
     );
 
     void createTexture(
-        std::unique_ptr<uint8_t[]> data,
-        uint16_t width, uint16_t height, bool hasAlpha,
+        cocos2d::CCImage* img,
         int32_t levelID, Quality quality,
         FetchTask::PostResult&& resolve,
         FetchTask::HasBeenCancelled&& isCancelled

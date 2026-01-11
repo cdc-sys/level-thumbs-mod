@@ -1,24 +1,21 @@
 #pragma once
-#ifndef _LOADINGOVERLAY_H_
-#define _LOADINGOVERLAY_H_
 #include <Geode/Geode.hpp>
 
-using namespace geode::prelude;
-
-class LoadingOverlay : public CCLayer {
+class LoadingOverlay : public cocos2d::CCLayer {
+protected:
     bool init() override;
-    bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent) override;
-    CCLabelBMFont *loadingTextLabel = nullptr;
-    CCLayerColor *layerColor;
-    LoadingCircle *loadingCircle;
+    bool ccTouchBegan(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* pEvent) override;
     void keyBackClicked() override;
     void registerWithTouchDispatcher() override;
+
+    cocos2d::CCLabelBMFont* loadingTextLabel = nullptr;
+    cocos2d::CCLayerColor* layerColor = nullptr;
+    LoadingCircle* loadingCircle = nullptr;
     int pressCount = 0;
 
 public:
-    void changeStatus(const char *status);
+    void changeStatus(const char* status);
     void show();
     void fadeOut();
-    static LoadingOverlay *create(const char *status = nullptr);
+    static LoadingOverlay* create(const char* status = nullptr);
 };
-#endif

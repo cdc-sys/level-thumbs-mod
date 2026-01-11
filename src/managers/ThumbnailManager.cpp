@@ -184,7 +184,7 @@ ThumbnailManager::FetchTask ThumbnailManager::fetchThumbnail(int32_t levelID, Qu
 #endif
 
                 return FetchTask::runWithCallback(
-                    [this, data = std::move(data), levelID, quality](auto resolve, auto, auto isCancelled) {
+                    [this, data = std::move(data), levelID, quality](auto resolve, auto, auto isCancelled) mutable {
                         this->decodeImageAsync(
                             std::move(data),
                             levelID, quality,
@@ -306,25 +306,20 @@ void ThumbnailManager::decodeImageAsync(
         return resolve(FetchTask::Cancel{});
     }
 
-    CCImage img;
-    if (!img.initWithImageData(data.data(), data.size())) {
+    auto img = new CCImage();
+    if (!img->initWithImageData(data.data(), data.size())) {
+        delete img;
         return resolve(Err("Failed to decode image"));
     }
 
-    auto imgData = img.m_pData;
-    auto imgWidth = img.m_nWidth;
-    auto imgHeight = img.m_nHeight;
-    auto imgHasAlpha = img.m_bHasAlpha;
-    img.m_pData = nullptr; // prevent destructor from freeing the data
-
     if (isCancelled()) {
+        delete img;
         return resolve(FetchTask::Cancel{});
     }
 
-    queueInMainThread([this, levelID, quality, resolve = std::move(resolve), imgData, imgWidth, imgHeight, imgHasAlpha, isCancelled = std::move(isCancelled)]() mutable {
+    queueInMainThread([this, levelID, quality, resolve = std::move(resolve), img, isCancelled = std::move(isCancelled)]() mutable {
         createTexture(
-            std::unique_ptr<uint8_t[]>(imgData),
-            imgWidth, imgHeight, imgHasAlpha,
+            img,
             levelID, quality,
             std::move(resolve),
             std::move(isCancelled)
@@ -333,12 +328,14 @@ void ThumbnailManager::decodeImageAsync(
 }
 
 void ThumbnailManager::createTexture(
-    std::unique_ptr<uint8_t[]> data,
-    uint16_t width, uint16_t height, bool hasAlpha,
+    CCImage* img,
     int32_t levelID, Quality quality,
     FetchTask::PostResult&& resolve,
     FetchTask::HasBeenCancelled&& isCancelled
 ) {
+    // make sure to delete image on exit
+    std::unique_ptr<CCImage> imgPtr(img);
+
     // check cancellation again
     if (isCancelled()) {
         return resolve(FetchTask::Cancel{});
@@ -346,12 +343,7 @@ void ThumbnailManager::createTexture(
 
     // create texture
     auto texture = new CCTexture2D();
-    if (!texture->initWithData(
-        data.get(),
-        hasAlpha ? kCCTexture2DPixelFormat_RGBA8888 : kCCTexture2DPixelFormat_RGB888,
-        width, height,
-        {static_cast<float>(width), static_cast<float>(height)}
-    )) {
+    if (!texture->initWithImage(img)) {
         delete texture;
         return resolve(Err("Failed to create texture from image"));
     }
