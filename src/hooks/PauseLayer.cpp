@@ -87,6 +87,16 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
     }
 
     void onScreenshot(CCObject*) {
+        if (CCDirector::get()->getContentScaleFactor() < 4.f) {
+            FLAlertLayer::create(
+                "Screenshot Error",
+                "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
+                "Please enable it in the settings and try again.",
+                "OK"
+            )->show();
+            return;
+        }
+
         auto playLayer = PlayLayer::get();
         if (!playLayer) {
             return;
