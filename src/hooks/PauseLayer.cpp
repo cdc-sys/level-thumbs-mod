@@ -1,27 +1,34 @@
 #include <Geode/modify/PauseLayer.hpp>
+#include "../layers/ThumbnailPopup.hpp"
 #include "../managers/SettingsManager.hpp"
 #include "../utils/RenderTexture.hpp"
-#include "../layers/ThumbnailPopup.hpp"
-#include "Geode/cocos/textures/CCTexture2D.h"
-
-// src: https://github.com/RayDeeUx/PRNTSCRN-CONTINUD/blob/main/src/SharedScreenshotLogic.hpp
-#define HIDE_NODE(parent, val) \
-	if (parent) { \
-		if (auto node = parent->getChildByID(#val); node) { \
-			uiNodes[#val] = node->isVisible(); \
-			node->setVisible(false); \
-		}\
-	}
-#define RESTORE_NODE(parent, val) \
-	if (parent) { \
-		if (auto node = parent->getChildByID(#val); node) { \
-			parent->getChildByID(#val)->setVisible(uiNodes[#val]); \
-		} \
-	}
 
 #include <prevter.imageplus/include/api.hpp>
 
 using namespace geode::prelude;
+
+struct HideNode {
+    CCNode* node = nullptr;
+    bool wasVisible = false;
+
+    HideNode(CCNode* parent, std::string_view id) {
+        if (parent) {
+            node = parent->getChildByID(id);
+            if (node) {
+                wasVisible = node->isVisible();
+                node->setVisible(false);
+            }
+        }
+    }
+
+    ~HideNode() {
+        if (node) {
+            node->setVisible(wasVisible);
+        }
+    }
+};
+
+#define HIDE_NODE(parent, id) HideNode GEODE_CONCAT(hide_, __COUNTER__)(parent, id);
 
 struct UIObjectState {
     GameObject* object;
@@ -80,25 +87,35 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
     }
 
     void onScreenshot(CCObject*) {
+        if (CCDirector::get()->getContentScaleFactor() < 4.f) {
+            FLAlertLayer::create(
+                "Screenshot Error",
+                "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
+                "Please enable it in the settings and try again.",
+                "OK"
+            )->show();
+            return;
+        }
+
         auto playLayer = PlayLayer::get();
         if (!playLayer) {
             return;
         }
-        std::unordered_map<const char*, bool> uiNodes = {};
-        HIDE_NODE(playLayer, mat.run-info/RunInfoWidget);
-		HIDE_NODE(playLayer, cheeseworks.speedruntimer/timer);
-		HIDE_NODE(playLayer, sawblade.dim_mode/opacityLabel);
-		HIDE_NODE(playLayer, zilko.xdbot/state-label);
-		HIDE_NODE(playLayer, zilko.xdbot/frame-label);
-		HIDE_NODE(playLayer, zilko.xdbot/recording-audio-label);
-		HIDE_NODE(playLayer, zilko.xdbot/button-menu);
-		HIDE_NODE(playLayer, dankmeme.globed2/game-overlay);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_top_left);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_top_right);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom_left);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom_right);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_bottom);
-		HIDE_NODE(playLayer, tobyadd.gdh/labels_top);
+
+        HIDE_NODE(playLayer, "mat.run-info/RunInfoWidget");
+        HIDE_NODE(playLayer, "cheeseworks.speedruntimer/timer");
+        HIDE_NODE(playLayer, "sawblade.dim_mode/opacityLabel");
+        HIDE_NODE(playLayer, "zilko.xdbot/state-label");
+        HIDE_NODE(playLayer, "zilko.xdbot/frame-label");
+        HIDE_NODE(playLayer, "zilko.xdbot/recording-audio-label");
+        HIDE_NODE(playLayer, "zilko.xdbot/button-menu");
+        HIDE_NODE(playLayer, "dankmeme.globed2/game-overlay");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_top_left");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_top_right");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom_left");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom_right");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom");
+        HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
 
         auto oldScale = playLayer->getScaleY();
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
@@ -166,25 +183,11 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             shader->m_screenSize = oldScreenSize;
             shader->setupShader(false);
             if (!pixelateHardEdges) {
-                    ccTexParams a = {GL_LINEAR,GL_LINEAR};
-                    shader->m_sprite->getTexture()->setTexParameters(&a);
-                }
+                ccTexParams a = {GL_LINEAR, GL_LINEAR};
+                shader->m_sprite->getTexture()->setTexParameters(&a);
+            }
             shader->prePixelateShader();
         }
-        RESTORE_NODE(playLayer, mat.run-info/RunInfoWidget);
-		RESTORE_NODE(playLayer, cheeseworks.speedruntimer/timer);
-		RESTORE_NODE(playLayer, sawblade.dim_mode/opacityLabel);
-		RESTORE_NODE(playLayer, zilko.xdbot/state-label);
-		RESTORE_NODE(playLayer, zilko.xdbot/frame-label);
-		RESTORE_NODE(playLayer, zilko.xdbot/recording-audio-label);
-		RESTORE_NODE(playLayer, zilko.xdbot/button-menu);
-		RESTORE_NODE(playLayer, dankmeme.globed2/game-overlay);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top_left);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top_right);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom_left);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom_right);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_bottom);
-		RESTORE_NODE(playLayer, tobyadd.gdh/labels_top);
 
         if (!data) {
             log::error("Failed to take screenshot: could not get pixel data");
@@ -199,9 +202,12 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
 
         // TODO: upload to server
         auto levelID = PlayLayer::get()->m_level->m_levelID;
-        auto saveDir = fmt::format("{}/{}.webp",Mod::get()->getSaveDir(),levelID);
-        file::writeBinary(saveDir, *res);
-        auto popup = ThumbnailPopup::create(levelID,saveDir);
-        popup->show();
+        auto saveDir = fmt::format("{}/{}.webp", Mod::get()->getSaveDir(),levelID);
+        if (auto saveRes = file::writeBinary(saveDir, *res); !saveRes) {
+            log::error("Failed to save screenshot: {}", saveRes.unwrapErr());
+            return;
+        }
+
+        ThumbnailPopup::create(levelID,saveDir)->show();
     }
 };

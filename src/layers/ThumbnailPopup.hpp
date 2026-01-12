@@ -1,33 +1,33 @@
 #pragma once
 
 #include <Geode/utils/web.hpp>
-#include "../managers/ThumbnailManager.hpp"
 #include "../managers/AuthManager.hpp"
+#include "../managers/ThumbnailManager.hpp"
 
 using namespace geode::prelude;
 
 class ThumbnailPopup : public Popup<int> {
 protected:
     std::unordered_set<Ref<CCTouch>> m_touches;
-    float m_initialDistance;
-    float m_initialScale;
-    bool wasZooming=false;
+    float m_initialDistance = 0;
+    float m_initialScale = 0;
+    bool wasZooming = false;
     CCPoint m_touchMidPoint;
-    int m_levelID;
+    int m_levelID = 0;
     float m_maxHeight = 220;
 
     EventListener<ThumbnailManager::FetchTask> m_downloadListener;
     EventListener<web::WebTask> m_infoListener;
 
     LoadingCircle* m_loadingCircle = LoadingCircle::create();
-    CCMenuItemSpriteExtra* m_downloadBtn;
-    CCMenuItemSpriteExtra* m_infoBtn;
-    CCMenuItemToggler* m_thumbInfoBtn;
-    CCClippingNode* m_clippingNode;
+    CCMenuItemSpriteExtra* m_downloadBtn = nullptr;
+    CCMenuItemSpriteExtra* m_infoBtn = nullptr;
+    CCMenuItemToggler* m_thumbInfoBtn = nullptr;
+    CCClippingNode* m_clippingNode = nullptr;
     Ref<CCImage> m_image;
-    CCLabelBMFont* m_theFunny;
+    CCLabelBMFont* m_theFunny = nullptr;
 
-    bool m_isPreview;
+    bool m_isPreview = false;
     std::string m_previewFileName;
     EventListener<AuthManager::UploadTask> m_uploadListener;
 
@@ -45,11 +45,11 @@ protected:
     void onOpenFolder(CCObject* sender);
     void recenter(CCObject* sender);
 
-    bool ccTouchBegan(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
-    void ccTouchMoved(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
-    void ccTouchEnded(cocos2d::CCTouch*pTouch,cocos2d::CCEvent* event) override;
+    bool ccTouchBegan(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
+    void ccTouchMoved(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
+    void ccTouchEnded(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
 
 public:
-    static ThumbnailPopup* create(int id,bool screenshotPreview=false);
-    static ThumbnailPopup* create(int id,std::string filename);
+    static ThumbnailPopup* create(int id, bool screenshotPreview = false);
+    static ThumbnailPopup* create(int id, std::string filename);
 };

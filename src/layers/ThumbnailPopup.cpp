@@ -11,34 +11,44 @@
 
 using namespace geode::prelude;
 
-#include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include <argon/argon.hpp>
 #include "ThumbnailPopup.hpp"
 
-void ThumbnailPopup::onDownload(CCObject* sender){
-    CCApplication::sharedApplication()->openURL(ThumbnailManager::get().getThumbnailUrl(m_levelID).c_str());
+void ThumbnailPopup::onDownload(CCObject* sender) {
+    CCApplication::sharedApplication()->openURL(ThumbnailManager::getThumbnailUrl(m_levelID).c_str());
 }
-void ThumbnailPopup::onOpenFolder(CCObject* sender){
-    geode::utils::file::openFolder(Mod::get()->getSaveDir());
-    geode::utils::clipboard::write(fmt::format("{}",this->m_levelID));
-    geode::Notification::create("Copied ID to clipboard.",nullptr)->show();
+
+void ThumbnailPopup::onOpenFolder(CCObject* sender) {
+    file::openFolder(Mod::get()->getSaveDir());
+    clipboard::write(fmt::to_string(this->m_levelID));
+    Notification::create("Copied ID to clipboard.", nullptr)->show();
 }
-void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
+
+void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
     if (m_isPreview){
-        createQuickPopup("Confirmation","Are you sure you want to submit?","No","Yes",[this](auto,bool btn2){
-            if (!Mod::get()->getSavedValue<bool>("showed-rules") && btn2){
-                auto rules = ConfirmAlertLayer::createRulesPopup([this](bool btn2){
-                    if (btn2) {
-                        runSubmissionLogic();
-                        Mod::get()->setSavedValue<bool>("showed-rules", true);
-                    }
-                },"Submission Rules","submission_rules.md","OK","Submit");
-                rules->show();
-            } else {
-                if (btn2) runSubmissionLogic();
-            }   
-        }); 
+        createQuickPopup(
+            "Confirmation",
+            "Are you sure you want to submit?",
+            "No", "Yes",
+            [this](auto, bool btn2){
+                if (!Mod::get()->getSavedValue<bool>("showed-rules") && btn2){
+                    ConfirmAlertLayer::createRulesPopup(
+                        [this](bool btn2){
+                            if (btn2) {
+                                runSubmissionLogic();
+                                Mod::get()->setSavedValue<bool>("showed-rules", true);
+                            }
+                        },
+                        "Submission Rules",
+                        "submission_rules.md",
+                        "OK","Submit"
+                    )->show();
+                } else {
+                    if (btn2) runSubmissionLogic();
+                }
+            }
+        );
     } else {
         createQuickPopup(
             "No thumbnail!",
@@ -53,28 +63,28 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender){
         );
     }
 }
-void ThumbnailPopup::runSubmissionLogic(){
+void ThumbnailPopup::runSubmissionLogic() {
     m_uploadListener.bind(this, &ThumbnailPopup::handleUploading);
-    m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName,m_levelID,true));
+    m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName, m_levelID, true));
 }
 
 void ThumbnailPopup::handleUploading(AuthManager::UploadTask::Event* event) {
-        if (auto res = event->getValue()) {
-            if (res->isOk()) {
-                FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
-            } else {
-                FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>",res->err().value_or("")),"OK")->show();
-            }
-        } else if (auto progress = event->getProgress()) {
-            //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
+    if (auto res = event->getValue()) {
+        if (res->isOk()) {
+            FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
+        } else {
+            FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>", res->err().value_or("Unknown error")), "OK")->show();
         }
+    } else if (auto progress = event->getProgress()) {
+        //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
     }
+}
 
 bool ThumbnailPopup::setup(int id) {
     m_noElasticity = false;
     auto winSize = CCDirector::sharedDirector()->getWinSize();
-    setID("ThumbnailPopup");
-    setTitle("");
+    this->setID("ThumbnailPopup");
+    this->setTitle("");
 
     CCScale9Sprite* border = CCScale9Sprite::create("GJ_square07.png");
     border->setContentSize(m_bgSprite->getContentSize());
@@ -83,7 +93,7 @@ bool ThumbnailPopup::setup(int id) {
 
     CCLayerColor* mask = CCLayerColor::create({255, 255, 255});
     mask->setContentSize({391, 220});
-    mask->setPosition({m_bgSprite->getContentSize().width / 2 - 391.f/2, m_bgSprite->getContentSize().height/2 - 220.f/2});
+    mask->setPosition({m_bgSprite->getContentSize().width/2 - 391.f/2, m_bgSprite->getContentSize().height/2 - 220.f/2});
 
     m_bgSprite->setColor({50,50,50});
 
@@ -98,7 +108,7 @@ bool ThumbnailPopup::setup(int id) {
     CCSprite* downloadSprite = CCSprite::createWithSpriteFrameName("GJ_downloadBtn_001.png");
     m_downloadBtn = CCMenuItemSpriteExtra::create(downloadSprite, this, menu_selector(ThumbnailPopup::onDownload));
     m_downloadBtn->setEnabled(true);
-    m_downloadBtn->setVisible((m_isPreview ? false : true));
+    m_downloadBtn->setVisible(!m_isPreview);
     m_downloadBtn->setColor({125,125,125});
    
     m_downloadBtn->setPosition({m_mainLayer->getContentSize().width - 5, 5});
@@ -108,12 +118,12 @@ bool ThumbnailPopup::setup(int id) {
     CCSprite* infoBtn = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     CCSprite* infoBtnDark = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     infoBtnDark->setColor({100,100,100});
-    m_thumbInfoBtn = CCMenuItemExt::createToggler(infoBtnDark,infoBtn,[this](auto self){
+    m_thumbInfoBtn = CCMenuItemExt::createToggler(infoBtnDark, infoBtn, [this](auto self){
         this->m_mainLayer->getChildByID("thumbnail-info")->setVisible(!self->isOn());
         Mod::get()->setSavedValue<bool>("show-info", !self->isOn());
     });
     m_thumbInfoBtn->toggle(Mod::get()->getSavedValue<bool>("show-info"));
-    m_thumbInfoBtn->setVisible((m_isPreview ? false : true));
+    m_thumbInfoBtn->setVisible(!m_isPreview);
    
     m_thumbInfoBtn->setPosition({m_mainLayer->getContentSize().width - 5, 220});
 
@@ -129,17 +139,17 @@ bool ThumbnailPopup::setup(int id) {
     recenterBtn->setVisible(false);
     #endif
 
-    ButtonSprite* infoSprite = ButtonSprite::create((m_isPreview ? "Submit" : "What's this?"));
+    ButtonSprite* infoSprite = ButtonSprite::create(m_isPreview ? "Submit" : "What's this?");
     m_infoBtn = CCMenuItemSpriteExtra::create(infoSprite, this, menu_selector(ThumbnailPopup::openDiscordServerPopup));
 
     m_infoBtn->setPosition({m_mainLayer->getContentSize().width/2.f, 6});
-    m_infoBtn->setVisible((m_isPreview ? true : false));
+    m_infoBtn->setVisible(m_isPreview);
     m_infoBtn->setZOrder(3);
     m_buttonMenu->addChild(m_infoBtn);
 
-    m_theFunny = CCLabelBMFont::create((m_isPreview ? "Hiiii\ngeming\npopcorn\nskepper\nbob\nanvixo\nmoonstarmaster\ncdc\nlevel thumbnails bot\norangeyguy\ncrazytoast\nfuzzy\nkirky bonzai\nsilly billy" : "OwO"), "bigFont.fnt");
+    m_theFunny = CCLabelBMFont::create(m_isPreview ? "Hiiii\ngeming\npopcorn\nskepper\nbob\nanvixo\nmoonstarmaster\ncdc\nlevel thumbnails bot\norangeyguy\ncrazytoast\nfuzzy\nkirky bonzai\nsilly billy" : "OwO", "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
-    m_theFunny->setVisible((m_isPreview ? true : false));
+    m_theFunny->setVisible(m_isPreview);
     m_theFunny->setScale(0.25f);
 
     m_mainLayer->addChild(m_theFunny);
@@ -152,7 +162,7 @@ bool ThumbnailPopup::setup(int id) {
     m_loadingCircle->show();
 
     this->setTouchEnabled(true);
-    cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, cocos2d::kCCMenuHandlerPriority, true);
+    CCTouchDispatcher::get()->addTargetedDelegate(this, kCCMenuHandlerPriority, true);
     handleTouchPriority(this);
 
     if (!m_isPreview){
@@ -169,8 +179,7 @@ bool ThumbnailPopup::setup(int id) {
     return true;
 }
 
-void ThumbnailPopup::recenter(CCObject* sender){
-
+void ThumbnailPopup::recenter(CCObject* sender) {
     if(CCNode* node = m_clippingNode->getChildByID("thumbnail")) {
         node->setPosition({m_mainLayer->getContentWidth()/2,m_mainLayer->getContentHeight()/2});
         node->stopAllActions();
@@ -182,16 +191,16 @@ void ThumbnailPopup::recenter(CCObject* sender){
 }
 
 void ThumbnailPopup::handleDownloading(ThumbnailManager::FetchTask::Event* event) {
-        if (auto res = event->getValue()) {
-            if (res->isOk()) {
-                this->onDownloadSuccess(res->unwrap());
-            } else {
-                this->onDownloadError(res->unwrapErr());
-            }
-        } else if (auto progress = event->getProgress()) {
-            //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
+    if (auto res = event->getValue()) {
+        if (res->isOk()) {
+            this->onDownloadSuccess(res->unwrap());
+        } else {
+            this->onDownloadError(res->unwrapErr());
         }
+    } else if (auto progress = event->getProgress()) {
+        //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
     }
+}
 
 void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
     // thanks for fucking this up sheepdotcom
@@ -203,7 +212,7 @@ void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
     float scale = m_maxHeight/image->getContentSize().height;
     image->setScale(scale);
     image->setUserObject("scale", CCFloat::create(scale));
-    image->setPosition({m_mainLayer->getContentWidth()/2,m_mainLayer->getContentHeight()/2});
+    image->setPosition({m_mainLayer->getContentWidth()/2, m_mainLayer->getContentHeight()/2});
 
     image->setID("thumbnail");
     m_clippingNode->addChild(image);
@@ -213,7 +222,7 @@ void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
 void ThumbnailPopup::onDownloadError(std::string const& error) {
     // thanks for the image cvolton ;)
     CCSprite* image = CCSprite::create("noThumb.png"_spr);
-    float scale = m_maxHeight/image->getContentSize().height;
+    float scale = m_maxHeight / image->getContentSize().height;
     image->setScale(scale);
     image->setUserObject("scale", CCFloat::create(scale));
     image->setPosition({m_mainLayer->getContentWidth()/2, m_mainLayer->getContentHeight()/2});
@@ -228,32 +237,32 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 void ThumbnailPopup::loadThumbnailInfo(){
     auto req = web::WebRequest();
-    m_infoListener.setFilter(req.get(fmt::format("{}/thumbnail/{}/info",Settings::thumbnailAPIBaseURL(),m_levelID)));
+    m_infoListener.setFilter(req.get(fmt::format("{}/thumbnail/{}/info", Settings::thumbnailAPIBaseURL(), m_levelID)));
     
     SimpleTextArea* textArea = SimpleTextArea::create("Loading info...");
-    textArea->setAnchorPoint({0,0});
-    textArea->setPosition({5,5});
-    textArea->setScale(0.7);
+    textArea->setAnchorPoint({0, 0});
+    textArea->setPosition({5, 5});
+    textArea->setScale(0.7f);
     textArea->setVisible(false);
 
     LoadingSpinner* loader = LoadingSpinner::create(45.f/2);
-    loader->setAnchorPoint({0,0});
-    loader->setPosition({2.5f,2.5f});
+    loader->setAnchorPoint({0, 0});
+    loader->setPosition({2.5f, 2.5f});
 
     CCScale9Sprite* bg = CCScale9Sprite::create("square02b_001.png");
-    bg->setColor({0,0,0});
+    bg->setColor({0, 0, 0});
     bg->setOpacity(120);
-    bg->setScale(0.5);
+    bg->setScale(0.5f);
     //bg->setContentWidth(textArea->getScaledContentWidth()+10*2);
     //bg->setContentHeight(textArea->getScaledContentHeight()+10*2);
     bg->setContentWidth(55);
     bg->setContentHeight(55);
-    bg->setAnchorPoint({0,0});
+    bg->setAnchorPoint({0, 0});
 
     CCNode* container = CCNode::create();
     container->setID("thumbnail-info");
-    container->setAnchorPoint({0,0});
-    container->setPosition({10,10});
+    container->setAnchorPoint({0, 0});
+    container->setPosition({10, 10});
     m_buttonMenu->setZOrder(100);
     container->setZOrder(99);
 
@@ -264,7 +273,7 @@ void ThumbnailPopup::loadThumbnailInfo(){
     container->setVisible(Mod::get()->getSavedValue<bool>("show-info"));
 
     this->m_mainLayer->addChild(container);
-    m_infoListener.bind([textArea,container,bg,loader](web::WebTask::Event* e){
+    m_infoListener.bind([textArea, container, bg, loader](web::WebTask::Event* e){
         if (auto res = e->getValue()) {
             if (res->ok()){
                 auto json = res->json().unwrapOrDefault();
@@ -275,7 +284,16 @@ void ThumbnailPopup::loadThumbnailInfo(){
                 std::string accepter = json["accepted_by_username"].asString().unwrapOr("Unknown");
                 
                 textArea->setVisible(true);
-                textArea->setText(fmt::format("Submitted by: {}\nSubmitted at: {}\nFirst submitted at: {}\nAccepted by: {}\nAccepted at: {}",uploader,upload_time,first_upload_time,accepter,accepted_time));
+                textArea->setText(fmt::format(
+                    "Submitted by: {}\n"
+                    "Submitted at: {}\n"
+                    "First submitted at: {}\n"
+                    "Accepted by: {}\n"
+                    "Accepted at: {}",
+                    uploader, upload_time,
+                    first_upload_time, accepter,
+                    accepted_time
+                ));
                 bg->setContentWidth((textArea->getScaledContentWidth()+10)*2);
                 bg->setContentHeight((textArea->getScaledContentHeight()+10)*2);
                 loader->removeFromParent();
@@ -286,27 +304,28 @@ void ThumbnailPopup::loadThumbnailInfo(){
     });
 }
 
-ThumbnailPopup* ThumbnailPopup::create(int id,bool screenshotPreview) {
+ThumbnailPopup* ThumbnailPopup::create(int id, bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
     ret->m_isPreview = false;
     ret->m_levelID = id;
-    if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
+    if (ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
         return ret;
     }
-    CC_SAFE_DELETE(ret);
+    delete ret;
     return nullptr;
 }
-ThumbnailPopup* ThumbnailPopup::create(int id,std::string filename) {
+
+ThumbnailPopup* ThumbnailPopup::create(int id, std::string filename) {
     auto ret = new ThumbnailPopup();
-    ret->m_previewFileName = filename;
+    ret->m_previewFileName = std::move(filename);
     ret->m_isPreview = true;
     ret->m_levelID = id;
-    if (ret && ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
+    if (ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
         ret->autorelease();
         return ret;
     }
-    CC_SAFE_DELETE(ret);
+    delete ret;
     return nullptr;
 }
 
@@ -315,7 +334,7 @@ float clip(float n, float lower, float upper) {
 }
 
 bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
-    if (m_touches.size()==1){
+    if (m_touches.size() == 1){
         //geode::log::info("this is where the second touch gets added");
         //thank you matcool
         auto firstTouch = *m_touches.begin();
@@ -331,10 +350,10 @@ bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
         // anchor point
         auto thumbnail = this->getChildByIDRecursive("thumbnail");
         auto oldAnchor = thumbnail->getAnchorPoint();
-        auto worldPos = thumbnail->convertToWorldSpace({0,0});
-        auto newAnchorX = (m_touchMidPoint.x-worldPos.x)/thumbnail->getScaledContentWidth();
-        auto newAnchorY = (m_touchMidPoint.y-worldPos.y)/thumbnail->getScaledContentHeight();
-        thumbnail->setAnchorPoint({clip(newAnchorX,0,1),clip(newAnchorY,0,1)});
+        auto worldPos = thumbnail->convertToWorldSpace({0, 0});
+        auto newAnchorX = (m_touchMidPoint.x-worldPos.x) / thumbnail->getScaledContentWidth();
+        auto newAnchorY = (m_touchMidPoint.y-worldPos.y) / thumbnail->getScaledContentHeight();
+        thumbnail->setAnchorPoint({clip(newAnchorX,0,1), clip(newAnchorY,0,1)});
         thumbnail->setPosition({
             thumbnail->getPositionX()+thumbnail->getScaledContentWidth()*-(oldAnchor.x-clip(newAnchorX,0,1)),
             thumbnail->getPositionY()+thumbnail->getScaledContentHeight()*-(oldAnchor.y-clip(newAnchorY,0,1))
@@ -350,14 +369,14 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
     if (m_touches.size() == 1){
         //geode::log::info("single touch");
         CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
-        if(!thumbnail) return;
-        thumbnail->setPosition(thumbnail->getPositionX()+pTouch->getDelta().x,thumbnail->getPositionY()+pTouch->getDelta().y);
+        if (!thumbnail) return;
+        thumbnail->setPosition(thumbnail->getPosition() + pTouch->getDelta());
     }
     if (m_touches.size() == 2){
         this->wasZooming = true;
         //geode::log::info("double touch (EPIC!)");
         CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
-        if(!thumbnail) return;
+        if (!thumbnail) return;
         //thank you matcool
         auto it = m_touches.begin();
         auto firstTouch = *it;
@@ -370,7 +389,7 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
         auto distNow = firstLoc.getDistance(secondLoc);
 
         auto const mult = this->m_initialDistance / distNow;
-        auto zoom = clip(this->m_initialScale / mult, 0.2f,6.5f);
+        auto zoom = clip(this->m_initialScale / mult, 0.2f, 6.5f);
         thumbnail->setScale(zoom);
         //geode::log::info("zoom {}",zoom);
 
@@ -382,24 +401,24 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
 
 void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
     m_touches.erase(pTouch);
-    if(wasZooming&&m_touches.size()==1){
+    if (wasZooming && m_touches.size() == 1){
         auto thumbnail = this->getChildByIDRecursive("thumbnail");
         auto scale = thumbnail->getScale();
-        if (scale<0.25f){
+        if (scale < 0.25f){
             thumbnail->runAction(
                 CCEaseSineInOut::create(
-                    CCScaleTo::create(0.5f,0.25f)
+                    CCScaleTo::create(0.5f, 0.25f)
                 )
             );
         }
-        if (scale>4.0f){
+        if (scale > 4.0f){
             thumbnail->runAction(
                 CCEaseSineInOut::create(
-                    CCScaleTo::create(0.5f,4.0f)
+                    CCScaleTo::create(0.5f, 4.0f)
                 )
             );
         }
-        wasZooming=false;
+        wasZooming = false;
     }
     //geode::log::info("ended");
 }

@@ -51,11 +51,11 @@ class ConfirmAlertLayer : public CCLayerColor {
 		m_containsBorder = border;
 
 		float checkboxMargin = 20;
-		
+
 		// handle touch prio
 		cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
 		//this->registerWithTouchDispatcher();
-		
+
 		//this->setTouchPriority(-999);
 		handleTouchPriority(this,true);
 
@@ -139,14 +139,14 @@ class ConfirmAlertLayer : public CCLayerColor {
 
 		// timed label implementation thing
 		auto readThisMenu = CCMenu::create();
-		
+
 		std::string readThisText = "I understand the consequences of this action.";
 		if (m_scrollable) readThisText = "I have read and understood the rules.";
 		auto readThisLabel = CCLabelBMFont::create(readThisText.c_str(),"bigFont.fnt");
 		auto readThisToggle = CCMenuItemExt::createToggler(CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png"),[this](CCObject* sender){
 			m_understood = !m_understood;
 		});
-		
+
 		readThisToggle->setScale(0.5);
 		readThisLabel->limitLabelWidth(241, 0.5, 0.0001);
 
@@ -246,7 +246,7 @@ class ConfirmAlertLayer : public CCLayerColor {
 		return create(callback,title, "", button1, button2, 350.0, false, 0.0,true,filePath);
 	}
 	static ConfirmAlertLayer* create(std::function<void(bool)> callback,char const* title, gd::string caption, char const* button1, char const* button2, float width, bool border, float height,bool scrollable=false,std::string filePath="") {
-		auto ret = new ConfirmAlertLayer(); 
+		auto ret = new ConfirmAlertLayer();
 		ret->m_callback = callback;
 		ret->m_scrollable = scrollable;
 		ret->m_filePath = filePath;
