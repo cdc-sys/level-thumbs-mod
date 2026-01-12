@@ -348,11 +348,11 @@ void ThumbnailManager::createTexture(
         return resolve(Err("Failed to create texture from image"));
     }
 
-    texture->autorelease();
     m_thumbnailCache[getThumbnailKey(levelID, quality)] = {
         texture,
         std::chrono::steady_clock::now()
     };
+    texture->release();
 
     resolve(Ok(texture));
 
