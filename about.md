@@ -4,7 +4,7 @@
 
 ## Thumbnail Submission
 
-To submit thumbnails, go to **settings** and toggle "In-Game Thumbnail Taking."<br>
+To submit thumbnails, go to **settings** and toggle "In-Game Thumbnail Taking."
 Then take a thumbnail using the **Level Thumbnails** button in the **pause menu**.
 
 # Credits

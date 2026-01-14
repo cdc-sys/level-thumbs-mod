@@ -2,19 +2,7 @@
 #include "SettingsManager.hpp"
 
 #include <Geode/utils/web.hpp>
-
-// Note: file caching is pretty broken right now
-#define DISABLE_FILE_CACHING 1
-/*
-Setting for file cache limit if we ever want to re-enable it:
-"file-cache-limit": {
-    "name": "File Cache Limit",
-    "description": "The amount of thumbnails that are cached on disk to avoid re-downloading them. -1 for unlimited (may use a lot of disk space).",
-    "type": "int",
-    "min": -1,
-    "default": 150
-},
-*/
+// #define DISABLE_FILE_CACHING 1
 
 using namespace geode::prelude;
 
@@ -139,64 +127,85 @@ ThumbnailManager::FetchTask ThumbnailManager::fetchThumbnail(int32_t levelID, Qu
     }
 #endif
 
-    // download from server
-    return web::WebRequest()
-        .get(getThumbnailUrl(levelID, quality))
-        .chain(
-            [this, levelID, quality, key = std::move(key)](web::WebResponse* res) -> FetchTask {
-                if (!res) {
-                    return FetchTask::immediate(Err("Failed to get response"));
-                }
-
-                if (!res->ok()) {
-                    switch (res->code()) {
-                        default: return FetchTask::immediate(Err(res->errorMessage()));
-                        case 404: return FetchTask::immediate(Err("Thumbnail not found"));
-                        case 500: return FetchTask::immediate(Err(
-                            res->json().unwrapOrDefault()["message"]
-                                .asString().unwrapOr("Internal server error")
-                        ));
+    return FetchTask::runWithCallback(
+        [
+            this, levelID, quality,
+            key = std::move(key)
+        ]<typename R, typename P, typename C>(R&& resolve, P&& progress, C&& isCancelled) mutable {
+            util::downloadFile(
+                getThumbnailUrl(levelID, quality),
+                [progress = std::forward<P>(progress)](util::DownloadProgress prog) {
+                    progress(prog);
+                },
+                [
+                    this, levelID, quality,
+                    resolve = std::forward<R>(resolve),
+                    isCancelled = std::forward<C>(isCancelled),
+                    key = std::move(key)
+                ](Result<ByteVector> res) mutable {
+                    if (!res) {
+                        resolve(Err(std::move(res).unwrapErr()));
+                        return;
                     }
-                }
 
-                auto data = res->data();
-                if (data.empty()) {
-                    return FetchTask::immediate(Err("Received empty thumbnail data"));
-                }
-
-                // save to disk cache
-#ifndef DISABLE_FILE_CACHING
-                if (Settings::thumbnailFileCacheLimit() != 0) {
-                    auto path = getThumbnailPath(levelID, quality);
-                    auto writeRes = file::writeBinary(path, data);
-                    if (!writeRes) {
-                        log::warn("Failed to write thumbnail {} to disk cache: {}", path, writeRes.unwrapErr());
-                    } else {
-                        std::unique_lock lock(m_fileCacheMutex);
-                        m_fileCache[key] = {
-                            levelID,
-                            quality,
-                            std::string(Settings::thumbnailAPIBaseURL()),
-                            std::chrono::system_clock::now(),
-                        };
+                    if (isCancelled()) {
+                        return;
                     }
-                }
-#endif
 
-                return FetchTask::runWithCallback(
-                    [this, data = std::move(data), levelID, quality](auto resolve, auto, auto isCancelled) mutable {
-                        this->decodeImageAsync(
-                            std::move(data),
+                    // save to disk cache
+                    #ifndef DISABLE_FILE_CACHING
+                    if (Settings::thumbnailFileCacheLimit() != 0) {
+                        auto path = getThumbnailPath(levelID, quality);
+                        auto writeRes = file::writeBinary(path, res.unwrap());
+                        if (!writeRes) {
+                            log::warn("Failed to write thumbnail {} to disk cache: {}", path, writeRes.unwrapErr());
+                        } else {
+                            std::unique_lock lock(m_fileCacheMutex);
+                            m_fileCache[key] = {
+                                levelID,
+                                quality,
+                                std::string(Settings::thumbnailAPIBaseURL()),
+                                std::chrono::system_clock::now(),
+                            };
+                        }
+                    }
+                    #endif
+
+                    // WebTask has a really annoying detail, where it copies everything onto main thread upon completion
+                    // so this scope is technically main thread right now. Because of that, we spawn a new thread to do the decoding.
+                    // On Windows, we use WinInet directly, so we avoid this overhead and just decode on the same thread.
+                    // (on why we use WinInet on Windows, read src/utils/Downloader.hpp)
+                    // - prevter
+                    #ifndef GEODE_IS_WINDOWS
+                    std::thread(
+                        [
+                            this,
+                            res = std::move(res),
                             levelID, quality,
-                            std::move(resolve),
-                            std::move(isCancelled)
-                        );
-                    },
-                    "Thumbnail Decode Task"
-                );
-            },
-            "Thumbnail Download Handler"
-        );
+                            resolve = std::forward<R>(resolve),
+                            isCancelled = std::forward<C>(isCancelled)
+                        ]() mutable {
+                            this->decodeImageAsync(
+                                std::move(res).unwrap(),
+                                levelID, quality,
+                                std::move(resolve),
+                                std::move(isCancelled)
+                            );
+                        }
+                    ).detach();
+                    #else
+                    this->decodeImageAsync(
+                        std::move(res).unwrap(),
+                        levelID, quality,
+                        std::move(resolve),
+                        std::move(isCancelled)
+                    );
+                    #endif
+                }
+            );
+        },
+        "Thumbnail Download Task"
+    );
 }
 
 ThumbnailManager::CacheState ThumbnailManager::getCacheState(int32_t levelID, Quality quality) {
@@ -238,7 +247,7 @@ std::filesystem::path ThumbnailManager::getThumbnailPath(std::string_view api, i
     return Mod::get()->getSaveDir()
          / "cache"
          / fmt::to_string(std::hash<std::string_view>{}(api))
-            / fmt::format("{}-{}.webp", levelID, quality);
+         / fmt::format("{}-{}.webp", levelID, quality);
 }
 
 std::filesystem::path const& ThumbnailManager::getCacheDirectory() {
@@ -266,7 +275,7 @@ void ThumbnailManager::cleanupFileCacheEntry(int32_t levelID, Quality quality) {
         std::error_code ec;
         std::filesystem::remove(getThumbnailPath(levelID, quality), ec);
         if (ec) {
-            log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality).string(), ec.message());
+            log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality), ec.message());
         }
         m_fileCache.erase(it);
     }
