@@ -25,4 +25,13 @@ add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 CPMAddPackage("gh:GlobedGD/argon@1.2.0")
 target_link_libraries(${PROJECT_NAME} argon)
 
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} wininet.lib)
+endif()
+
+# read version from mod.json and set as define
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/mod.json" MOD_JSON_CONTENTS)
+string(JSON MOD_VERSION GET "${MOD_JSON_CONTENTS}" version)
+target_compile_definitions(${PROJECT_NAME} PRIVATE MOD_VERSION="${MOD_VERSION}")
+
 setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.7.1)

@@ -1,5 +1,7 @@
 #pragma once
 #include <Geode/Geode.hpp>
+
+#include "../utils/Downloader.hpp"
 #include "../utils/AsyncTask.hpp"
 
 class ThumbnailManager {
@@ -26,7 +28,7 @@ public:
         Ready
     };
 
-    using FetchTask = CustomTask<geode::Result<geode::Ref<cocos2d::CCTexture2D>>, geode::utils::web::WebProgress>;
+    using FetchTask = geode::Task<geode::Result<geode::Ref<cocos2d::CCTexture2D>>, util::DownloadProgress>;
     FetchTask fetchThumbnail(int32_t levelID, Quality quality = Quality::High);
     CacheState getCacheState(int32_t levelID, Quality quality = Quality::High);
 
