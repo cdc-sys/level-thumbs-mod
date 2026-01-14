@@ -69,6 +69,9 @@ namespace util {
         DWORD contentLength = 0;
         DWORD lengthSize = sizeof(contentLength);
         HttpQueryInfoA(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentLength, &lengthSize, nullptr);
+        if (contentLength > 0) {
+            buffer.reserve(contentLength);
+        }
 
         while (InternetReadFile(hFile, tempBuffer, chunkSize, &bytesRead) && bytesRead > 0) {
             buffer.insert(buffer.end(), tempBuffer, tempBuffer + bytesRead);
