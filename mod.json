@@ -69,6 +69,13 @@
             "min": 0,
             "default": 50
         },
+        "file-cache-limit": {
+            "name": "File Cache Limit",
+            "description": "The amount of thumbnails that are cached on disk to avoid re-downloading them. -1 for unlimited (may use a lot of disk space).",
+            "type": "int",
+            "min": -1,
+            "default": 150
+        },
         "api-title": {
             "name": "API Settings",
             "type": "title"

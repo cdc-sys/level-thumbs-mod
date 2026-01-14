@@ -2,19 +2,7 @@
 #include "SettingsManager.hpp"
 
 #include <Geode/utils/web.hpp>
-
-// Note: file caching is pretty broken right now
-#define DISABLE_FILE_CACHING 1
-/*
-Setting for file cache limit if we ever want to re-enable it:
-"file-cache-limit": {
-    "name": "File Cache Limit",
-    "description": "The amount of thumbnails that are cached on disk to avoid re-downloading them. -1 for unlimited (may use a lot of disk space).",
-    "type": "int",
-    "min": -1,
-    "default": 150
-},
-*/
+// #define DISABLE_FILE_CACHING 1
 
 using namespace geode::prelude;
 
