@@ -128,16 +128,19 @@ ThumbnailManager::FetchTask ThumbnailManager::fetchThumbnail(int32_t levelID, Qu
 #endif
 
     return FetchTask::runWithCallback(
-        [this, levelID, quality, key = std::move(key)](auto resolve, auto progress, auto isCancelled) mutable {
+        [
+            this, levelID, quality,
+            key = std::move(key)
+        ]<typename R, typename P, typename C>(R&& resolve, P&& progress, C&& isCancelled) mutable {
             util::downloadFile(
                 getThumbnailUrl(levelID, quality),
-                [progress = std::move(progress)](util::DownloadProgress prog) {
+                [progress = std::forward<P>(progress)](util::DownloadProgress prog) {
                     progress(prog);
                 },
                 [
                     this, levelID, quality,
-                    resolve = std::move(resolve),
-                    isCancelled = std::move(isCancelled),
+                    resolve = std::forward<R>(resolve),
+                    isCancelled = std::forward<C>(isCancelled),
                     key = std::move(key)
                 ](Result<ByteVector> res) mutable {
                     if (!res) {
@@ -175,7 +178,13 @@ ThumbnailManager::FetchTask ThumbnailManager::fetchThumbnail(int32_t levelID, Qu
                     // - prevter
                     #ifndef GEODE_IS_WINDOWS
                     std::thread(
-                        [this, res = std::move(res), levelID, quality, resolve = std::move(resolve), isCancelled = std::move(isCancelled)]() mutable {
+                        [
+                            this,
+                            res = std::move(res),
+                            levelID, quality,
+                            resolve = std::forward<R>(resolve),
+                            isCancelled = std::forward<C>(isCancelled)
+                        ]() mutable {
                             this->decodeImageAsync(
                                 std::move(res).unwrap(),
                                 levelID, quality,

@@ -89,7 +89,7 @@ namespace util {
             .userAgent(USER_AGENT)
             .get(url)
             .listen(
-                [onComplete = std::forward(onComplete)](auto* res) {
+                [onComplete = std::forward<CompleteCallback>(onComplete)](auto* res) mutable {
                     if (!res->ok()) {
                         switch (res->code()) {
                             default: return onComplete(geode::Err(res->errorMessage()));
@@ -103,7 +103,7 @@ namespace util {
 
                     onComplete(geode::Ok(res->data()));
                 },
-                [onProgress = std::forward(onProgress)](auto* prog) {
+                [onProgress = std::forward<ProgressCallback>(onProgress)](auto* prog) mutable {
                     if (!prog) return;
                     onProgress({
                         prog->downloaded(),
