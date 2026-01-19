@@ -39,18 +39,19 @@
             "type": "bool",
             "default": true
         },
-        "lists-limit-enabled":{
-            "name":"Enable Thumbnail Limit In Lists",
+        "lists-levels-limit-enabled": {
+            "name": "Enable Thumbnail Limit In Lists",
             "description": "Allows you to <cy>limit</c> the amount of thumbnails shown in level lists.\n<cy>Enable this setting if you experience lag when loading larger lists.</c>",
-            "type":"bool",
-            "default":false
+            "type": "bool",
+            "default": false
         },
-        "level-lists-limit":{
-            "name":"Limit",
-            "description":"Thumbnails won't be shown past the level with the limit as it's place in the list.",
-            "type":"int",
-            "default":5,
-            "enable-if": "lists-limit-enabled"
+        "lists-levels-limit": {
+            "name": "Thumbnail Limit",
+            "description": "Sets the <cy>limit</c> of levels to fetch and render thumbnails for, starting from the <cj>top</c>.",
+            "type": "int",
+            "min": 1,
+            "default": 100,
+            "enable-if": "lists-levels-limit-enabled"
         },
         "enable-thumbnail-taking":{
             "name":"In-Game Thumbnail Taking",

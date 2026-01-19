@@ -5,6 +5,10 @@ class Settings {
 public:
     static bool showInBrowser();
     static bool showThumbnailButton();
+
+    static bool listsLimitEnabled();
+    static int64_t listsLevelsLimit();
+
     static bool thumbnailTakingEnabled();
 
     static int64_t thumbnailCacheLimit();

@@ -3,7 +3,6 @@
 
 #include "../managers/SettingsManager.hpp"
 #include "../managers/ThumbnailManager.hpp"
-#include "../layers/ConfirmAlertLayer.hpp"
 
 using namespace geode::prelude;
 
@@ -163,7 +162,14 @@ class $modify(ThumbnailLevelCell, LevelCell) {
 
     $override void loadCustomLevelCell() {
         LevelCell::loadCustomLevelCell();
+
+        // Don't render thumbnails if Enable Thumbnails is disabled
         if (!Settings::showInBrowser()) {
+            return;
+        }
+        // Don't render thumbnails if Enable Thumbnail Limit In Lists is enabled & this cell exceeds limit
+        auto tableView = this->m_tableView;
+        if (Settings::listsLimitEnabled() && (tableView && tableView->m_cellArray->count() >= Settings::listsLevelsLimit())) {
             return;
         }
 

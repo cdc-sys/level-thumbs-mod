@@ -18,6 +18,22 @@ bool Settings::showThumbnailButton() {
     return value;
 }
 
+bool Settings::listsLimitEnabled() {
+    static bool value = (
+        listenForSettingChanges<bool>("lists-levels-limit-enabled",[](bool val) { value = val; }),
+        getMod()->getSettingValue<bool>("lists-levels-limit-enabled")
+    );
+    return value;
+}
+
+int64_t Settings::listsLevelsLimit() {
+    static int64_t value = (
+        listenForSettingChanges<int64_t>("lists-levels-limit",[](int64_t val) { value = val; }),
+        getMod()->getSettingValue<int64_t>("lists-levels-limit")
+    );
+    return value;
+}
+
 bool Settings::thumbnailTakingEnabled() {
     static bool value = (
         listenForSettingChanges<bool>("enable-thumbnail-taking",[](bool val) { value = val; }),
