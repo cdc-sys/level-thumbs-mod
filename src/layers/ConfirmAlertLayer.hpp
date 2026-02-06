@@ -222,10 +222,10 @@ class ConfirmAlertLayer : public CCLayerColor {
 	void registerWithTouchDispatcher() override {
 		CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, -500, true);
 	}
-	void keyDown(enumKeyCodes keyCode) override {
+	void keyDown(enumKeyCodes keyCode, double timestamp) override {
 		if (keyCode == 0x3ec) sendAndCleanup(true);
 		else if (keyCode == KEY_Space && !m_noAction) return;
-		else CCLayer::keyDown(keyCode);
+		else CCLayer::keyDown(keyCode, timestamp);
 	}
 	void onBtn1(cocos2d::CCObject*) {
 		sendAndCleanup(false);

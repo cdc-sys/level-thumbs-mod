@@ -208,6 +208,6 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        ThumbnailPopup::create(levelID,saveDir)->show();
+        // ThumbnailPopup::create(levelID,saveDir)->show();
     }
 };

@@ -1,6 +1,5 @@
 #pragma once
 #include <Geode/Geode.hpp>
-#include "../utils/AsyncTask.hpp"
 #include <argon/argon.hpp>
 #include <Geode/utils/web.hpp>
 #include "SettingsManager.hpp"

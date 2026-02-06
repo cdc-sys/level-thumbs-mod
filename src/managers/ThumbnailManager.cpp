@@ -76,150 +76,152 @@ ThumbnailManager& ThumbnailManager::get() {
     return instance;
 }
 
-ThumbnailManager::FetchTask ThumbnailManager::fetchThumbnail(int32_t levelID, Quality quality) {
+std::optional<Ref<CCTexture2D>> ThumbnailManager::getThumbnail(int32_t levelID, Quality quality) {
+    auto key = getThumbnailKey(levelID, quality);
+    std::shared_lock lock(m_cacheMutex);
+    auto it = m_thumbnailCache.find(key.view());
+    if (it != m_thumbnailCache.end()) {
+        this->touch(it->first);
+        return it->second.texture;
+    }
+    return std::nullopt;
+}
+
+ThumbnailManager::FetchFuture ThumbnailManager::fetchThumbnail(int32_t levelID, Quality quality, ProgressCallback progress) {
     auto key = getThumbnailKey(levelID, quality);
 
     // check memory cache
-    auto it = m_thumbnailCache.find(key);
-    if (it != m_thumbnailCache.end()) {
-        this->touch(it->first);
-        return FetchTask::immediate(Ok(it->second.texture));
+    {
+        std::shared_lock lock(m_cacheMutex);
+        auto it = m_thumbnailCache.find(key.view());
+        if (it != m_thumbnailCache.end()) {
+            this->touch(it->first);
+            co_return Ok(it->second.texture);
+        }
     }
 
     // check file cache
 #ifndef DISABLE_FILE_CACHING
     {
-        std::unique_lock lock(m_fileCacheMutex);
-        auto it2 = m_fileCache.find(key);
+        std::shared_lock lock(m_fileCacheMutex);
+        auto it2 = m_fileCache.find(key.view());
         if (it2 != m_fileCache.end()) {
             this->touch(it2->first, true);
-            return FetchTask::runWithCallback(
-                [this, levelID, quality, key = std::move(key)](auto resolve, auto, auto isCancelled) {
-                    auto path = getThumbnailPath(levelID, quality);
-                    auto res = file::readBinary(path);
-                    if (!res) {
-                        // delete the corrupted file from cache
-                        log::warn("Failed to read cached thumbnail '{}': {}", path, res.unwrapErr());
-                        this->cleanupFileCacheEntry(levelID, quality);
-                        resolve(Err("Failed to read cached thumbnail. Retry download"));
-                        return;
+            GEODE_CO_UNWRAP_INTO(
+                auto img,
+                co_await async::runtime().spawnBlocking<Result<CCImage*>>(
+                    [this, levelID, quality] {
+                        return this->readImageFromFile(levelID, quality);
                     }
-
-                    auto data = std::move(res).unwrap();
-                    if (data.empty()) {
-                        // delete the corrupted file from cache
-                        log::warn("Cached thumbnail is empty");
-                        this->cleanupFileCacheEntry(levelID, quality);
-                        resolve(Err("Cached thumbnail is empty. Retry download"));
-                        return;
-                    }
-
-                    this->decodeImageAsync(
-                        std::move(data),
-                        levelID, quality,
-                        std::move(resolve),
-                        std::move(isCancelled)
-                    );
-                },
-                "Load Thumbnail from Disk"
+                )
             );
+
+            if (!img) {
+                co_return Err("Failed to decode image");
+            }
+
+            auto [tx, rx] = arc::oneshot::channel<FetchResult>();
+            queueInMainThread([
+                this, img,
+                levelID, quality,
+                tx = std::move(tx)
+            ]() mutable {
+                this->createTexture(
+                    img,
+                    levelID, quality,
+                    std::move(tx)
+                );
+            });
+
+            auto res = co_await rx.recv();
+            if (!res) {
+                this->cleanupFileCacheEntry(levelID, quality);
+                co_return Err("Failed to create texture from cached thumbnail");
+            }
+
+            co_return std::move(res).unwrap();
         }
     }
 #endif
 
-    return FetchTask::runWithCallback(
-        [
-            this, levelID, quality,
-            key = std::move(key)
-        ]<typename R, typename P, typename C>(R&& resolve, P&& progress, C&& isCancelled) mutable {
-            util::downloadFile(
-                getThumbnailUrl(levelID, quality),
-                [progress = std::forward<P>(progress)](util::DownloadProgress prog) {
-                    progress(prog);
-                },
-                [
-                    this, levelID, quality,
-                    resolve = std::forward<R>(resolve),
-                    isCancelled = std::forward<C>(isCancelled),
-                    key = std::move(key)
-                ](Result<ByteVector> res) mutable {
-                    if (!res) {
-                        resolve(Err(std::move(res).unwrapErr()));
-                        return;
-                    }
+    auto res = co_await web::WebRequest()
+        .userAgent(USER_AGENT)
+        .onProgress(std::move(progress))
+        .get(getThumbnailUrl(levelID, quality));
 
-                    if (isCancelled()) {
-                        return;
-                    }
-
-                    // save to disk cache
-                    #ifndef DISABLE_FILE_CACHING
-                    if (Settings::thumbnailFileCacheLimit() != 0) {
-                        auto path = getThumbnailPath(levelID, quality);
-                        auto writeRes = file::writeBinary(path, res.unwrap());
-                        if (!writeRes) {
-                            log::warn("Failed to write thumbnail {} to disk cache: {}", path, writeRes.unwrapErr());
-                        } else {
-                            std::unique_lock lock(m_fileCacheMutex);
-                            m_fileCache[key] = {
-                                levelID,
-                                quality,
-                                std::string(Settings::thumbnailAPIBaseURL()),
-                                std::chrono::system_clock::now(),
-                            };
-                        }
-                    }
-                    #endif
-
-                    // WebTask has a really annoying detail, where it copies everything onto main thread upon completion
-                    // so this scope is technically main thread right now. Because of that, we spawn a new thread to do the decoding.
-                    // On Windows, we use WinInet directly, so we avoid this overhead and just decode on the same thread.
-                    // (on why we use WinInet on Windows, read src/utils/Downloader.hpp)
-                    // - prevter
-                    #ifndef GEODE_IS_WINDOWS
-                    std::thread(
-                        [
-                            this,
-                            res = std::move(res),
-                            levelID, quality,
-                            resolve = std::forward<R>(resolve),
-                            isCancelled = std::forward<C>(isCancelled)
-                        ]() mutable {
-                            this->decodeImageAsync(
-                                std::move(res).unwrap(),
-                                levelID, quality,
-                                std::move(resolve),
-                                std::move(isCancelled)
-                            );
-                        }
-                    ).detach();
-                    #else
-                    this->decodeImageAsync(
-                        std::move(res).unwrap(),
-                        levelID, quality,
-                        std::move(resolve),
-                        std::move(isCancelled)
-                    );
-                    #endif
-                }
+    if (!res.ok()) {
+        switch (res.code()) {
+            default: co_return Err(res.errorMessage());
+            case 404: co_return Err("Thumbnail not found");
+            case 500: co_return Err(
+                res.json().unwrapOrDefault()["message"].asString().unwrapOr("Internal server error")
             );
-        },
-        "Thumbnail Download Task"
+        }
+    }
+
+    auto img = co_await async::runtime().spawnBlocking<CCImage*>(
+        [this, levelID, quality, data = std::move(res).data(), key = std::move(key)] mutable {
+            #ifndef DISABLE_FILE_CACHING
+            if (Settings::thumbnailFileCacheLimit() != 0) {
+                auto path = getThumbnailPath(levelID, quality);
+                auto writeRes = file::writeBinary(path, data);
+                if (!writeRes) {
+                    log::warn("Failed to write thumbnail {} to disk cache: {}", path, writeRes.unwrapErr());
+                } else {
+                    std::unique_lock lock(m_fileCacheMutex);
+                    m_fileCache[key.str()] = {
+                        levelID,
+                        quality,
+                        std::string(Settings::thumbnailAPIBaseURL()),
+                        std::chrono::system_clock::now(),
+                    };
+                }
+            }
+            #endif
+
+            return decodeImage(std::move(data));
+        }
     );
+
+    if (!img) {
+        co_return Err("Failed to decode image");
+    }
+
+    auto [tx, rx] = arc::oneshot::channel<FetchResult>();
+    queueInMainThread([
+        this, img,
+        levelID, quality,
+        tx = std::move(tx)
+    ]() mutable {
+        this->createTexture(
+            img,
+            levelID, quality,
+            std::move(tx)
+        );
+    });
+
+    auto decodeRes = co_await rx.recv();
+    if (!decodeRes) {
+        this->cleanupFileCacheEntry(levelID, quality);
+        co_return Err("Failed to create texture from downloaded thumbnail");
+    }
+
+    co_return std::move(decodeRes).unwrap();
 }
 
 ThumbnailManager::CacheState ThumbnailManager::getCacheState(int32_t levelID, Quality quality) {
     auto key = getThumbnailKey(levelID, quality);
-    auto it = m_thumbnailCache.find(key);
-    if (it != m_thumbnailCache.end()) {
-        return CacheState::Ready;
+    {
+        std::shared_lock lock(m_cacheMutex);
+        if (m_thumbnailCache.contains(key.view())) {
+            return CacheState::Ready;
+        }
     }
 
     // check disk cache
 #ifndef DISABLE_FILE_CACHING
-    std::unique_lock lock(m_fileCacheMutex);
-    auto it2 = m_fileCache.find(key);
-    if (it2 != m_fileCache.end()) {
+    std::shared_lock lock(m_fileCacheMutex);
+    if (m_fileCache.contains(key.view())) {
         return CacheState::SavedOnDisk;
     }
 #endif
@@ -268,16 +270,18 @@ std::filesystem::path const& ThumbnailManager::getCacheDirectory() {
 }
 
 void ThumbnailManager::cleanupFileCacheEntry(int32_t levelID, Quality quality) {
-    std::unique_lock lock(m_fileCacheMutex);
-    auto key = getThumbnailKey(levelID, quality);
-    auto it = m_fileCache.find(key);
-    if (it != m_fileCache.end()) {
-        std::error_code ec;
-        std::filesystem::remove(getThumbnailPath(levelID, quality), ec);
-        if (ec) {
-            log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality), ec.message());
-        }
+    {
+        std::unique_lock lock(m_fileCacheMutex);
+        auto key = getThumbnailKey(levelID, quality);
+        auto it = m_fileCache.find(key.view());
+        if (it == m_fileCache.end()) return;
         m_fileCache.erase(it);
+    }
+
+    std::error_code ec;
+    std::filesystem::remove(getThumbnailPath(levelID, quality), ec);
+    if (ec) {
+        log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality), ec.message());
     }
 }
 
@@ -301,69 +305,69 @@ void ThumbnailManager::saveDiskCache() {
 }
 #endif
 
-std::string ThumbnailManager::getThumbnailKey(int32_t levelID, Quality quality) {
-    return fmt::format("{}-{}-{}", levelID, quality, Settings::thumbnailAPIBaseURL());
+ThumbnailManager::ThumbnailKey ThumbnailManager::getThumbnailKey(int32_t levelID, Quality quality) {
+    ThumbnailKey buf;
+    buf.append("{}-{}-{}", levelID, quality, Settings::thumbnailAPIBaseURL());
+    return buf;
 }
 
-void ThumbnailManager::decodeImageAsync(
-    std::vector<uint8_t> data,
-    int32_t levelID, Quality quality,
-    FetchTask::PostResult&& resolve,
-    FetchTask::HasBeenCancelled&& isCancelled
-) {
-    if (isCancelled()) {
-        return resolve(FetchTask::Cancel{});
+Result<CCImage*> ThumbnailManager::readImageFromFile(int32_t levelID, Quality quality) {
+    auto path = getThumbnailPath(levelID, quality);
+    auto res = file::readBinary(path);
+    if (!res) {
+        // delete the corrupted file from cache
+        log::warn("Failed to read cached thumbnail '{}': {}", path, res.unwrapErr());
+        get().cleanupFileCacheEntry(levelID, quality);
+        return Err("Failed to read cached thumbnail. Retry download");
     }
 
+    auto data = std::move(res).unwrap();
+    if (data.empty()) {
+        // delete the corrupted file from cache
+        log::warn("Cached thumbnail is empty");
+        get().cleanupFileCacheEntry(levelID, quality);
+        return Err("Cached thumbnail is empty. Retry download");
+    }
+
+    return Ok(decodeImage(std::move(data)));
+}
+
+CCImage* ThumbnailManager::decodeImage(std::vector<uint8_t> data) {
     auto img = new CCImage();
     if (!img->initWithImageData(data.data(), data.size())) {
         delete img;
-        return resolve(Err("Failed to decode image"));
+        return nullptr;
     }
-
-    if (isCancelled()) {
-        delete img;
-        return resolve(FetchTask::Cancel{});
-    }
-
-    queueInMainThread([this, levelID, quality, resolve = std::move(resolve), img, isCancelled = std::move(isCancelled)]() mutable {
-        createTexture(
-            img,
-            levelID, quality,
-            std::move(resolve),
-            std::move(isCancelled)
-        );
-    });
+    return img;
 }
 
 void ThumbnailManager::createTexture(
     CCImage* img,
     int32_t levelID, Quality quality,
-    FetchTask::PostResult&& resolve,
-    FetchTask::HasBeenCancelled&& isCancelled
+    arc::oneshot::Sender<Result<Ref<CCTexture2D>>> tx
 ) {
     // make sure to delete image on exit
     std::unique_ptr<CCImage> imgPtr(img);
-
-    // check cancellation again
-    if (isCancelled()) {
-        return resolve(FetchTask::Cancel{});
-    }
 
     // create texture
     auto texture = new CCTexture2D();
     if (!texture->initWithImage(img)) {
         delete texture;
-        return resolve(Err("Failed to create texture from image"));
+        (void) tx.send(Err("Failed to create texture from image"));
+        return;
     }
 
-    m_thumbnailCache[getThumbnailKey(levelID, quality)] = {
-        texture,
-        std::chrono::steady_clock::now()
-    };
+    {
+        std::unique_lock lock(m_cacheMutex);
+        m_thumbnailCache[getThumbnailKey(levelID, quality).str()] = {
+            texture,
+            std::chrono::steady_clock::now()
+        };
+    }
+
     texture->release();
 
-    resolve(Ok(texture));
+    (void) tx.send(Ok(texture));
 
     if (!m_scheduledEviction && m_thumbnailCache.size() > Settings::thumbnailCacheLimit()) {
         queueInMainThread([this] { evictIfNeeded(); });
@@ -371,7 +375,7 @@ void ThumbnailManager::createTexture(
     }
 }
 
-void ThumbnailManager::touch(std::string const& key, bool fileCache) {
+void ThumbnailManager::touch(std::string_view key, bool fileCache) {
 #ifndef DISABLE_FILE_CACHING
     if (fileCache) {
         auto it = m_fileCache.find(key);
