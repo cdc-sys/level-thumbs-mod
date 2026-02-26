@@ -1,19 +1,17 @@
-#include "ConfirmAlertLayer.hpp"
-#include "GUI/CCControlExtension/CCScale9Sprite.h"
-#include "Geode/cocos/textures/CCTextureCache.h"
-#include "Geode/ui/LoadingSpinner.hpp"
-#include "Geode/ui/Popup.hpp"
-#include "Geode/ui/TextArea.hpp"
-#include "LoadingOverlay.hpp"
-#include <Geode/Geode.hpp>
-#include <fmt/format.h>
+#include "ThumbnailPopup.hpp"
 #include <chrono>
+#include <argon/argon.hpp>
+#include <fmt/format.h>
+#include <Geode/Geode.hpp>
+#include <Geode/cocos/textures/CCTextureCache.h>
+#include <Geode/ui/LoadingSpinner.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <Geode/ui/TextArea.hpp>
+#include <Geode/utils/web.hpp>
+#include "ConfirmAlertLayer.hpp"
+#include "LoadingOverlay.hpp"
 
 using namespace geode::prelude;
-
-#include <Geode/utils/web.hpp>
-#include <argon/argon.hpp>
-#include "ThumbnailPopup.hpp"
 
 void ThumbnailPopup::onDownload(CCObject* sender) {
     CCApplication::sharedApplication()->openURL(ThumbnailManager::getThumbnailUrl(m_levelID).c_str());
@@ -55,7 +53,7 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
             "This level seems to not have a <cj>Thumbnail</c>...\n"
             "Don't worry, you can submit a thumbnail yourself! Open the level and click the thumbnail button in the pause menu.",
             "No Thanks", "JOIN!",
-            [this](auto, bool btn2) {
+            [](auto, bool btn2) {
                 if (btn2) {
                     CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
                 }
@@ -64,29 +62,38 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
     }
 }
 void ThumbnailPopup::runSubmissionLogic() {
-    m_uploadListener.bind(this, &ThumbnailPopup::handleUploading);
-    m_uploadListener.setFilter(AuthManager::get().uploadThumbnail(m_previewFileName, m_levelID, true));
-}
-
-void ThumbnailPopup::handleUploading(AuthManager::UploadTask::Event* event) {
-    if (auto res = event->getValue()) {
-        if (res->isOk()) {
-            FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
-        } else {
-            FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>", res->err().value_or("Unknown error")), "OK")->show();
+    auto load = LoadingOverlay::create("Logging in...");
+    load->show();
+    m_uploadListener.spawn(
+        AuthManager::get().uploadThumbnail(
+            m_previewFileName, m_levelID,
+            [load](ZStringView progress) {
+                queueInMainThread([load, progress] {
+                    load->changeStatus(progress.c_str());
+                });
+            }
+        ),
+        [load](auto res){
+            load->fadeOut();
+            if (res.isOk()) {
+                FLAlertLayer::create("Success!", res.unwrapOrDefault(), "OK")->show();
+            } else {
+                FLAlertLayer::create("Error!", fmt::format("<cr>{}</c>", res.unwrapErr()), "OK")->show();
+            }
         }
-    } else if (auto progress = event->getProgress()) {
-        //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
-    }
+    );
 }
 
-bool ThumbnailPopup::setup(int id) {
+
+bool ThumbnailPopup::init(int id) {
+    if (!Popup::init(395.f, 225.f, "GJ_square05.png"))
+        return false;
+
     m_noElasticity = false;
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     this->setID("ThumbnailPopup");
-    this->setTitle("");
 
-    CCScale9Sprite* border = CCScale9Sprite::create("GJ_square07.png");
+    NineSlice* border = NineSlice::create("GJ_square07.png");
     border->setContentSize(m_bgSprite->getContentSize());
     border->setPosition(m_bgSprite->getPosition());
     border->setZOrder(2);
@@ -110,7 +117,7 @@ bool ThumbnailPopup::setup(int id) {
     m_downloadBtn->setEnabled(true);
     m_downloadBtn->setVisible(!m_isPreview);
     m_downloadBtn->setColor({125,125,125});
-   
+
     m_downloadBtn->setPosition({m_mainLayer->getContentSize().width - 5, 5});
 
     m_buttonMenu->addChild(m_downloadBtn);
@@ -119,12 +126,12 @@ bool ThumbnailPopup::setup(int id) {
     CCSprite* infoBtnDark = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     infoBtnDark->setColor({100,100,100});
     m_thumbInfoBtn = CCMenuItemExt::createToggler(infoBtnDark, infoBtn, [this](auto self){
-        this->m_mainLayer->getChildByID("thumbnail-info")->setVisible(!self->isOn());
+        if (auto info = m_mainLayer->getChildByID("thumbnail-info")) info->setVisible(!self->isOn());
         Mod::get()->setSavedValue<bool>("show-info", !self->isOn());
     });
     m_thumbInfoBtn->toggle(Mod::get()->getSavedValue<bool>("show-info"));
     m_thumbInfoBtn->setVisible(!m_isPreview);
-   
+
     m_thumbInfoBtn->setPosition({m_mainLayer->getContentSize().width - 5, 220});
 
     m_buttonMenu->addChild(m_thumbInfoBtn);
@@ -166,10 +173,17 @@ bool ThumbnailPopup::setup(int id) {
     handleTouchPriority(this);
 
     if (!m_isPreview){
-        m_downloadListener.bind(this, &ThumbnailPopup::handleDownloading);
-        m_downloadListener.setFilter(ThumbnailManager::get().fetchThumbnail(
-            m_levelID, ThumbnailManager::Quality::High
-        ));
+        m_downloadListener.spawn(
+            ThumbnailManager::get().fetchThumbnail(m_levelID, ThumbnailManager::Quality::High),
+            [this](Result<Ref<CCTexture2D>> result) {
+                if (result.isOk()) {
+                    this->onDownloadSuccess(result.unwrap());
+                } else {
+                    this->onDownloadError(result.unwrapErr());
+                }
+            }
+        );
+
         this->loadThumbnailInfo();
     } else {
         CCTextureCache::get()->removeTextureForKey(this->m_previewFileName.c_str());
@@ -187,18 +201,6 @@ void ThumbnailPopup::recenter(CCObject* sender) {
         node->setUserObject("new-scale", CCFloat::create(scale));
         node->setScale(scale);
         node->setAnchorPoint({0.5,0.5});
-    }
-}
-
-void ThumbnailPopup::handleDownloading(ThumbnailManager::FetchTask::Event* event) {
-    if (auto res = event->getValue()) {
-        if (res->isOk()) {
-            this->onDownloadSuccess(res->unwrap());
-        } else {
-            this->onDownloadError(res->unwrapErr());
-        }
-    } else if (auto progress = event->getProgress()) {
-        //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
     }
 }
 
@@ -232,13 +234,41 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
     m_theFunny->setVisible(true);
     m_clippingNode->addChild(image);
     m_loadingCircle->fadeAndRemove();
-
 }
 
-void ThumbnailPopup::loadThumbnailInfo(){
-    auto req = web::WebRequest();
-    m_infoListener.setFilter(req.get(fmt::format("{}/thumbnail/{}/info", Settings::thumbnailAPIBaseURL(), m_levelID)));
-    
+// adapted from
+// https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
+static Result<std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>> parseISOTimestamp(std::string const& str) {
+    #ifdef GEODE_IS_WINDOWS
+    std::stringstream ss(str);
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> seconds;
+    if (ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", seconds)) {
+        return Ok(seconds);
+    }
+    return Err("Invalid date time format '{}'", str);
+    #else
+    tm t;
+    auto ptr = strptime(str.c_str(), "%Y-%m-%dT%H:%M:%S", &t);
+    if (ptr != str.data() + str.size()) {
+        return Err("Invalid date time format '{}'", str);
+    }
+    auto time = timegm(&t);
+    return Ok(std::chrono::system_clock::from_time_t(time));
+    #endif
+}
+
+static std::string readISOTimestamp(matjson::Value const& value) {
+    auto res = value.asString();
+    if (!res) return "Unknown";
+
+    auto timeRes = parseISOTimestamp(*res);
+    if (!timeRes) return "Unknown";
+
+    auto tm = geode::localtime(std::chrono::system_clock::to_time_t(timeRes.unwrap()));
+    return fmt::format("{:%Y-%m-%d %H:%M:%S}", tm);
+}
+
+void ThumbnailPopup::loadThumbnailInfo() {
     SimpleTextArea* textArea = SimpleTextArea::create("Loading info...");
     textArea->setAnchorPoint({0, 0});
     textArea->setPosition({5, 5});
@@ -249,7 +279,7 @@ void ThumbnailPopup::loadThumbnailInfo(){
     loader->setAnchorPoint({0, 0});
     loader->setPosition({2.5f, 2.5f});
 
-    CCScale9Sprite* bg = CCScale9Sprite::create("square02b_001.png");
+    NineSlice* bg = NineSlice::create("square02b_001.png");
     bg->setColor({0, 0, 0});
     bg->setOpacity(120);
     bg->setScale(0.5f);
@@ -269,46 +299,52 @@ void ThumbnailPopup::loadThumbnailInfo(){
     container->addChild(bg);
     container->addChild(textArea);
     container->addChild(loader);
-    
+
     container->setVisible(Mod::get()->getSavedValue<bool>("show-info"));
 
     this->m_mainLayer->addChild(container);
-    m_infoListener.bind([textArea, container, bg, loader](web::WebTask::Event* e){
-        if (auto res = e->getValue()) {
-            if (res->ok()){
-                auto json = res->json().unwrapOrDefault();
-                std::string uploader = json["username"].asString().unwrapOr("Unknown");
-                std::string upload_time = json["upload_time"].asString().unwrapOr("Unknown");
-                std::string first_upload_time = json["first_upload_time"].asString().unwrapOr("Unknown");
-                std::string accepted_time = json["accepted_time"].asString().unwrapOr("Unknown");
-                std::string accepter = json["accepted_by_username"].asString().unwrapOr("Unknown");
-                
-                textArea->setVisible(true);
-                textArea->setText(fmt::format(
-                    "Submitted by: {}\n"
-                    "Submitted at: {}\n"
-                    "First submitted at: {}\n"
-                    "Accepted by: {}\n"
-                    "Accepted at: {}",
-                    uploader, upload_time,
-                    first_upload_time, accepter,
-                    accepted_time
-                ));
-                bg->setContentWidth((textArea->getScaledContentWidth()+10)*2);
-                bg->setContentHeight((textArea->getScaledContentHeight()+10)*2);
-                loader->removeFromParent();
-            } else{
+    m_infoListener.spawn(
+        web::WebRequest()
+            .userAgent(USER_AGENT)
+            .get(fmt::format("{}/thumbnail/{}/info", Settings::thumbnailAPIBaseURL(), m_levelID)),
+        [textArea, container, bg, loader](web::WebResponse res) {
+            if (!res.ok()) {
                 container->setVisible(false);
+                return;
             }
+
+            auto json = res.json().unwrapOrDefault();
+
+            auto uploader = json["username"].asString().unwrapOr("Unknown");
+            auto accepter = json["accepted_by_username"].asString().unwrapOr("Unknown");
+
+            auto upload_time = readISOTimestamp(json["upload_time"]);
+            auto first_upload_time = readISOTimestamp(json["first_upload_time"]);
+            auto accepted_time = readISOTimestamp(json["accepted_time"]);
+
+            textArea->setVisible(true);
+            textArea->setText(fmt::format(
+                "Submitted by: {}\n"
+                "Submitted at: {}\n"
+                "First submitted at: {}\n"
+                "Accepted by: {}\n"
+                "Accepted at: {}",
+                uploader, upload_time,
+                first_upload_time, accepter,
+                accepted_time
+            ));
+            bg->setContentWidth((textArea->getScaledContentWidth()+10)*2);
+            bg->setContentHeight((textArea->getScaledContentHeight()+10)*2);
+            loader->removeFromParent();
         }
-    });
+    );
 }
 
 ThumbnailPopup* ThumbnailPopup::create(int id, bool screenshotPreview) {
     auto ret = new ThumbnailPopup();
     ret->m_isPreview = false;
     ret->m_levelID = id;
-    if (ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
+    if (ret->init(-1)) {
         ret->autorelease();
         return ret;
     }
@@ -321,7 +357,7 @@ ThumbnailPopup* ThumbnailPopup::create(int id, std::string filename) {
     ret->m_previewFileName = std::move(filename);
     ret->m_isPreview = true;
     ret->m_levelID = id;
-    if (ret->initAnchored(395, 225, -1, "GJ_square05.png")) {
+    if (ret->init(-1)) {
         ret->autorelease();
         return ret;
     }

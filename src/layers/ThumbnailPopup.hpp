@@ -6,7 +6,7 @@
 
 using namespace geode::prelude;
 
-class ThumbnailPopup : public Popup<int> {
+class ThumbnailPopup : public Popup {
 protected:
     std::unordered_set<Ref<CCTouch>> m_touches;
     float m_initialDistance = 0;
@@ -16,8 +16,9 @@ protected:
     int m_levelID = 0;
     float m_maxHeight = 220;
 
-    EventListener<ThumbnailManager::FetchTask> m_downloadListener;
-    EventListener<web::WebTask> m_infoListener;
+    TaskHolder<ThumbnailManager::FetchResult> m_downloadListener;
+    TaskHolder<web::WebResponse> m_infoListener;
+    TaskHolder<AuthManager::UploadResult> m_uploadListener;
 
     LoadingCircle* m_loadingCircle = LoadingCircle::create();
     CCMenuItemSpriteExtra* m_downloadBtn = nullptr;
@@ -29,17 +30,14 @@ protected:
 
     bool m_isPreview = false;
     std::string m_previewFileName;
-    EventListener<AuthManager::UploadTask> m_uploadListener;
 
     void runSubmissionLogic();
 
-    void handleDownloading(ThumbnailManager::FetchTask::Event* event);
-    void handleUploading(AuthManager::UploadTask::Event* event);
     void loadThumbnailInfo();
     void onDownloadSuccess(Ref<CCTexture2D> const& texture);
     void onDownloadError(std::string const& error);
 
-    bool setup(int id) override;
+    bool init(int id);
     void onDownload(CCObject* sender);
     void openDiscordServerPopup(CCObject* sender);
     void onOpenFolder(CCObject* sender);

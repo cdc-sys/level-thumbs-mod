@@ -1,8 +1,8 @@
 #pragma once
+#include <shared_mutex>
 #include <Geode/Geode.hpp>
 
-#include "../utils/Downloader.hpp"
-#include "../utils/AsyncTask.hpp"
+#define USER_AGENT "LevelThumbnails/" GEODE_PLATFORM_NAME "/" MOD_VERSION
 
 class ThumbnailManager {
 private:
@@ -28,8 +28,15 @@ public:
         Ready
     };
 
-    using FetchTask = geode::Task<geode::Result<geode::Ref<cocos2d::CCTexture2D>>, util::DownloadProgress>;
-    FetchTask fetchThumbnail(int32_t levelID, Quality quality = Quality::High);
+    using FetchResult = geode::Result<geode::Ref<cocos2d::CCTexture2D>>;
+    using FetchFuture = arc::Future<FetchResult>;
+    using Progress = geode::utils::web::WebProgress const&;
+    using ProgressCallback = geode::Function<void(Progress)>;
+
+    using ThumbnailKey = geode::utils::StringBuffer<128>;
+
+    std::optional<geode::Ref<cocos2d::CCTexture2D>> getThumbnail(int32_t levelID, Quality quality = Quality::High);
+    FetchFuture fetchThumbnail(int32_t levelID, Quality quality = Quality::High, ProgressCallback progress = nullptr);
     CacheState getCacheState(int32_t levelID, Quality quality = Quality::High);
 
     static std::string getThumbnailUrl(int32_t levelID, Quality quality = Quality::High);
@@ -43,23 +50,20 @@ public:
     void saveDiskCache();
 
 private:
-    static std::string getThumbnailKey(int32_t levelID, Quality quality);
+    static ThumbnailKey getThumbnailKey(int32_t levelID, Quality quality);
 
-    void decodeImageAsync(
-        std::vector<uint8_t> data,
-        int32_t levelID, Quality quality,
-        FetchTask::PostResult&& resolve,
-        FetchTask::HasBeenCancelled&& isCancelled
-    );
+    using DecodeResult = geode::Result<cocos2d::CCImage*>;
+
+    geode::Result<cocos2d::CCImage*> readImageFromFile(int32_t levelID, Quality quality);
+    static cocos2d::CCImage* decodeImage(std::vector<uint8_t> data);
 
     void createTexture(
         cocos2d::CCImage* img,
         int32_t levelID, Quality quality,
-        FetchTask::PostResult&& resolve,
-        FetchTask::HasBeenCancelled&& isCancelled
+        arc::oneshot::Sender<geode::Result<geode::Ref<cocos2d::CCTexture2D>>> tx
     );
 
-    void touch(std::string const& key, bool fileCache = false);
+    void touch(std::string_view key, bool fileCache = false);
     void evictIfNeeded();
     void evictDiskCache();
 
@@ -76,9 +80,9 @@ private:
     };
 
 private:
-    std::unordered_map<std::string, CacheEntry> m_thumbnailCache;
-    std::unordered_map<std::string, FileCacheEntry> m_fileCache;
-    std::mutex m_cacheMutex;
-    std::mutex m_fileCacheMutex;
+    geode::utils::StringMap<CacheEntry> m_thumbnailCache;
+    geode::utils::StringMap<FileCacheEntry> m_fileCache;
+    std::shared_mutex m_cacheMutex;
+    std::shared_mutex m_fileCacheMutex;
     bool m_scheduledEviction = false;
 };

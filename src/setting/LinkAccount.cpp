@@ -1,11 +1,11 @@
-#include "Geode/ui/Layout.hpp"
-#include "Geode/ui/TextInput.hpp"
-#include "Geode/utils/cocos.hpp"
-#include <Geode/loader/SettingV3.hpp>
-#include <Geode/loader/Mod.hpp>
 #include <utility>
-#include "../managers/AuthManager.hpp"
+#include <Geode/loader/Mod.hpp>
+#include <Geode/loader/SettingV3.hpp>
+#include <Geode/ui/Layout.hpp>
+#include <Geode/ui/TextInput.hpp>
+#include <Geode/utils/cocos.hpp>
 #include "../layers/ConfirmAlertLayer.hpp"
+#include "../managers/AuthManager.hpp"
 
 using namespace geode::prelude;
 
@@ -41,7 +41,7 @@ public:
         root.checkUnknownKeys();
         return root.ok(std::static_pointer_cast<SettingV3>(res));
     }
-    
+
     SettingNodeV3* createNode(float width) override;
 };
 
@@ -53,20 +53,7 @@ struct geode::SettingTypeForValueType<MyCustomEnum> {
 class MyCustomSettingNodeV3 : public SettingValueNodeV3<MyCustomSettingV3> {
 protected:
     TextInput* m_linkTokenInput = nullptr;
-    EventListener<AuthManager::LinkTask> m_linkListener;
-
-    void handleLinking(AuthManager::LinkTask::Event* event){
-        if (auto res = event->getValue()) {
-            // run on next frame to prevent a race condition from happening and breaking the entire touch system (??????????????/
-            if (res->isOk()) {
-                FLAlertLayer::create("Success!",res->unwrapOrDefault(),"OK")->show();
-            } else {
-                FLAlertLayer::create("Error!",fmt::format("<cr>{}</c>",res->err().value_or("")),"OK")->show();
-            }
-        } else if (auto progress = event->getProgress()) {
-            //this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
-        }
-    }
+    TaskHolder<AuthManager::LinkResult> m_linkListener;
 
     bool init(std::shared_ptr<MyCustomSettingV3> setting, float width) {
         if (!SettingValueNodeV3::init(std::move(setting), width))
@@ -78,8 +65,19 @@ protected:
                 ConfirmAlertLayer::create(
                     [this](bool btn2){
                         if (btn2) {
-                            m_linkListener.bind(this, &MyCustomSettingNodeV3::handleLinking);
-                            m_linkListener.setFilter(AuthManager::get().linkAccount(m_linkTokenInput->getString()));
+                            auto load = LoadingOverlay::create("Linking..");
+                            load->show();
+                            m_linkListener.spawn(
+                                AuthManager::get().linkAccount(m_linkTokenInput->getString()),
+                                [load](auto res){
+                                    load->fadeOut();
+                                    if (res.isOk()) {
+                                        FLAlertLayer::create("Success!", res.unwrapOrDefault(), "OK")->show();
+                                    } else {
+                                        FLAlertLayer::create("Error!", fmt::format("<cr>{}</c>", res.unwrapErr()), "OK")->show();
+                                    }
+                                }
+                            );
                         }
                     },
                     "Warning!",
@@ -90,7 +88,7 @@ protected:
         );
         m_linkTokenInput = TextInput::create(150, "Link secret...", "bigFont.fnt");
         m_linkTokenInput->setFilter("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890_-.");
-        
+
         this->getButtonMenu()->addChild(m_linkTokenInput);
         this->getButtonMenu()->addChild(linkButton);
 
@@ -103,10 +101,10 @@ protected:
         this->getButtonMenu()->setScale(0.7f);
 
         this->updateState(nullptr);
-        
+
         return true;
     }
-    
+
     void updateState(CCNode* invoker) override {
         SettingValueNodeV3::updateState(invoker);
     }

@@ -9,7 +9,7 @@ using namespace geode::prelude;
 
 class $modify(ThumbnailLevelCell, LevelCell) {
     struct Fields {
-        EventListener<ThumbnailManager::FetchTask> m_fetchListener;
+        TaskHolder<ThumbnailManager::FetchResult> m_fetchListener;
         CCLabelBMFont* m_progressLabel = nullptr;
         LoadingSpinner* m_spinner = nullptr;
         CCClippingNode* m_clippingNode = nullptr;
@@ -71,7 +71,7 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         if (!parent) return;
 
         if (auto bg = typeinfo_cast<CCScale9Sprite*>(parent->getChildByID("background"))){
-            CCScale9Sprite* border = CCScale9Sprite::create("GJ_square07.png");
+            NineSlice* border = NineSlice::create("GJ_square07.png");
             border->setContentSize(bg->getContentSize());
             border->setPosition(bg->getPosition());
             border->setColor(bg->getColor());
@@ -149,18 +149,6 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         this->removeLoadingIndicators();
     }
 
-    void handleDownloading(ThumbnailManager::FetchTask::Event* event) {
-        if (auto res = event->getValue()) {
-            if (res->isOk()) {
-                this->onDownloadSuccess(res->unwrap());
-            } else {
-                this->onDownloadError(res->unwrapErr());
-            }
-        } else if (auto progress = event->getProgress()) {
-            this->updateProgressLabel(progress->downloadProgress().value_or(0.f));
-        }
-    }
-
     $override void loadCustomLevelCell() {
         LevelCell::loadCustomLevelCell();
         if (!Settings::showInBrowser()) {
@@ -168,11 +156,30 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         }
 
         auto fields = m_fields.self();
+        if (auto cached = ThumbnailManager::get().getThumbnail(m_level->m_levelID, ThumbnailManager::Quality::Small)) {
+            this->onDownloadSuccess(std::move(cached).value());
+            return;
+        }
+
         // update progress at the beginning of the download to not have instant downloads look weird
         this->updateProgressLabel(0);
-        fields->m_fetchListener.bind(this, &ThumbnailLevelCell::handleDownloading);
-        fields->m_fetchListener.setFilter(ThumbnailManager::get().fetchThumbnail(
-            m_level->m_levelID, ThumbnailManager::Quality::Small
-        ));
+        fields->m_fetchListener.spawn(
+            ThumbnailManager::get().fetchThumbnail(
+                m_level->m_levelID,
+                ThumbnailManager::Quality::Small,
+                [self = WeakRef(this)](web::WebProgress const& progress) {
+                    if (auto s = self.lock()) {
+                        s->updateProgressLabel(progress.downloadProgress().value_or(0.f));
+                    }
+                }
+            ),
+            [this](ThumbnailManager::FetchResult res) {
+                if (res.isOk()) {
+                    this->onDownloadSuccess(std::move(res).unwrap());
+                } else {
+                    this->onDownloadError(std::move(res).unwrapErr());
+                }
+            }
+        );
     }
 };

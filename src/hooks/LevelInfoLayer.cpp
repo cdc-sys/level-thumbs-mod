@@ -152,7 +152,7 @@ static void applyBlurPass(CCSprite* input, CCRenderTexture* output, CCGLProgram*
 
 class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
     struct Fields {
-        EventListener<ThumbnailManager::FetchTask> m_fetchListener;
+        TaskHolder<ThumbnailManager::FetchResult> m_fetchListener;
         CCSprite* m_background = nullptr;
     };
 
@@ -218,19 +218,20 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
         }
     }
 
-    void handleDownloading(ThumbnailManager::FetchTask::Event* event) {
-        if (auto res = event->getValue()) {
-            if (res->isOk()) {
-                this->onDownloadSuccess(res->unwrap());
-            }
-        }
-    }
-
     void updateBackground(int32_t levelID, ThumbnailManager::Quality quality) {
-        auto fields = m_fields.self();
+        if (auto cached = ThumbnailManager::get().getThumbnail(levelID, quality)) {
+            this->onDownloadSuccess(std::move(cached).value());
+            return;
+        }
 
-        fields->m_fetchListener.bind(this, &ThumbnailLevelInfoLayer::handleDownloading);
-        fields->m_fetchListener.setFilter(ThumbnailManager::get().fetchThumbnail(levelID, quality));
+        m_fields->m_fetchListener.spawn(
+            ThumbnailManager::get().fetchThumbnail(levelID, quality),
+            [this](auto result) {
+                if (result.isOk()) {
+                    this->onDownloadSuccess(std::move(result).unwrap());
+                }
+            }
+        );
     }
 
     $override bool init(GJGameLevel* level, bool challenge) {
@@ -244,7 +245,7 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
                 auto button = CCMenuItemExt::createSpriteExtra(sprite,[this](CCObject* sender){
                     ThumbnailPopup::create(m_level->m_levelID)->show();
                 });
-        
+
                 button->setID("thumbnail-button");
                 menu->addChild(button);
                 menu->updateLayout();
@@ -280,7 +281,6 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
 
         // if we don't have shaders enabled, and the quality is not small, run a fetch for the new quality
         this->updateBackground(levelID, bgQuality);
-
 
         return true;
     }
