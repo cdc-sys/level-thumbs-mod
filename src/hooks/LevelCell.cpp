@@ -71,7 +71,7 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         if (!parent) return;
 
         if (auto bg = typeinfo_cast<CCScale9Sprite*>(parent->getChildByID("background"))){
-            CCScale9Sprite* border = CCScale9Sprite::create("GJ_square07.png");
+            NineSlice* border = NineSlice::create("GJ_square07.png");
             border->setContentSize(bg->getContentSize());
             border->setPosition(bg->getPosition());
             border->setColor(bg->getColor());

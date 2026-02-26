@@ -144,10 +144,12 @@ ThumbnailManager::FetchFuture ThumbnailManager::fetchThumbnail(int32_t levelID, 
     }
 #endif
 
-    auto res = co_await web::WebRequest()
-        .userAgent(USER_AGENT)
-        .onProgress(std::move(progress))
-        .get(getThumbnailUrl(levelID, quality));
+    auto req = web::WebRequest().userAgent(USER_AGENT);
+    if (progress) {
+        req.onProgress(std::move(progress));
+    }
+
+    auto res = co_await req.get(getThumbnailUrl(levelID, quality));
 
     if (!res.ok()) {
         switch (res.code()) {
