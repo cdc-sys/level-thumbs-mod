@@ -168,9 +168,6 @@ bool ThumbnailPopup::init(int id) {
     m_loadingCircle->ignoreAnchorPointForPosition(false);
     m_loadingCircle->show();
 
-    this->setTouchEnabled(true);
-    CCTouchDispatcher::get()->addTargetedDelegate(this, kCCMenuHandlerPriority, true);
-    handleTouchPriority(this);
 
     if (!m_isPreview){
         m_downloadListener.spawn(
