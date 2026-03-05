@@ -235,15 +235,22 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 // adapted from
 // https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
+#ifdef GEODE_IS_WINDOWS
 static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::string const& str) {
-    #ifdef GEODE_IS_WINDOWS
     std::stringstream ss(str);
     std::chrono::system_clock::time_point seconds;
     if (ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", seconds)) {
         return Ok(seconds);
     }
     return Err("Invalid date time format '{}'", str);
-    #else
+}
+#else
+static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::string str) {
+    auto dotPos = str.find('.');
+    if (dotPos != std::string::npos) {
+        str[dotPos] = '\0';
+    }
+
     tm t;
     auto ptr = strptime(str.c_str(), "%Y-%m-%dT%H:%M:%S", &t);
     if (ptr != str.data() + str.size()) {
@@ -251,15 +258,18 @@ static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::stri
     }
     auto time = timegm(&t);
     return Ok(std::chrono::system_clock::time_point(std::chrono::seconds(time)));
-    #endif
 }
+#endif
 
 static std::string readISOTimestamp(matjson::Value const& value) {
     auto res = value.asString();
     if (!res) return "Unknown";
 
-    auto timeRes = parseISOTimestamp(*res);
-    if (!timeRes) return "Unknown";
+    auto timeRes = parseISOTimestamp(std::move(res).unwrap());
+    if (!timeRes) {
+        log::warn("{}", timeRes.unwrapErr());
+        return "Unknown";
+    }
 
     auto tm = geode::localtime(std::chrono::system_clock::to_time_t(timeRes.unwrap()));
     return fmt::format("{:%Y-%m-%d %H:%M:%S}", tm);
