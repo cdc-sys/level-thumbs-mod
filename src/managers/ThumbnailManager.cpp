@@ -102,45 +102,50 @@ ThumbnailManager::FetchFuture ThumbnailManager::fetchThumbnail(int32_t levelID, 
 
     // check file cache
 #ifndef DISABLE_FILE_CACHING
+    bool inFileCache = false;
     {
         std::shared_lock lock(m_fileCacheMutex);
         auto it2 = m_fileCache.find(key.view());
         if (it2 != m_fileCache.end()) {
             this->touch(it2->first, true);
-            GEODE_CO_UNWRAP_INTO(
-                auto img,
-                co_await async::runtime().spawnBlocking<Result<CCImage*>>(
-                    [this, levelID, quality] {
-                        return this->readImageFromFile(levelID, quality);
-                    }
-                )
-            );
-
-            if (!img) {
-                co_return Err("Failed to decode image");
-            }
-
-            auto [tx, rx] = arc::oneshot::channel<FetchResult>();
-            queueInMainThread([
-                this, img,
-                levelID, quality,
-                tx = std::move(tx)
-            ]() mutable {
-                this->createTexture(
-                    img,
-                    levelID, quality,
-                    std::move(tx)
-                );
-            });
-
-            auto res = co_await rx.recv();
-            if (!res) {
-                this->cleanupFileCacheEntry(levelID, quality);
-                co_return Err("Failed to create texture from cached thumbnail");
-            }
-
-            co_return std::move(res).unwrap();
+            inFileCache = true;
         }
+    }
+
+    if (inFileCache) {
+        GEODE_CO_UNWRAP_INTO(
+            auto img,
+            co_await async::runtime().spawnBlocking<Result<CCImage*>>(
+                [this, levelID, quality] {
+                    return this->readImageFromFile(levelID, quality);
+                }
+            )
+        );
+
+        if (!img) {
+            co_return Err("Failed to decode image");
+        }
+
+        auto [tx, rx] = arc::oneshot::channel<FetchResult>();
+        queueInMainThread([
+            this, img,
+            levelID, quality,
+            tx = std::move(tx)
+        ]() mutable {
+            this->createTexture(
+                img,
+                levelID, quality,
+                std::move(tx)
+            );
+        });
+
+        auto res = co_await rx.recv();
+        if (!res) {
+            this->cleanupFileCacheEntry(levelID, quality);
+            co_return Err("Failed to create texture from cached thumbnail");
+        }
+
+        co_return std::move(res).unwrap();
     }
 #endif
 
@@ -433,6 +438,8 @@ void ThumbnailManager::evictDiskCache() {
         } else {
             m_fileCache.clear();
         }
+
+        return;
     }
 
     while (m_fileCache.size() > static_cast<size_t>(limit)) {
