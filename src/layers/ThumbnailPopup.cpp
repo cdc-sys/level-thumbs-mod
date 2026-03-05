@@ -238,10 +238,10 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 // adapted from
 // https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
-static Result<std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>> parseISOTimestamp(std::string const& str) {
+static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::string const& str) {
     #ifdef GEODE_IS_WINDOWS
     std::stringstream ss(str);
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> seconds;
+    std::chrono::system_clock::time_point seconds;
     if (ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", seconds)) {
         return Ok(seconds);
     }
@@ -253,7 +253,7 @@ static Result<std::chrono::time_point<std::chrono::system_clock, std::chrono::se
         return Err("Invalid date time format '{}'", str);
     }
     auto time = timegm(&t);
-    return Ok(std::chrono::system_clock::from_time_t(time));
+    return Ok(std::chrono::system_clock::time_point(std::chrono::seconds(time)));
     #endif
 }
 
