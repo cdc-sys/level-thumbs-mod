@@ -235,31 +235,30 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 // adapted from
 // https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
+
+static Result<uint64_t> parseISOTimestamp(std::string str) {
 #ifdef GEODE_IS_WINDOWS
-static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::string const& str) {
     std::stringstream ss(str);
     std::chrono::system_clock::time_point seconds;
     if (ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", seconds)) {
-        return Ok(seconds);
+        return Ok(std::chrono::duration_cast<std::chrono::seconds>(seconds.time_since_epoch()).count());
     }
     return Err("Invalid date time format '{}'", str);
-}
 #else
-static Result<std::chrono::system_clock::time_point> parseISOTimestamp(std::string str) {
     auto dotPos = str.find('.');
     if (dotPos != std::string::npos) {
-        str[dotPos] = '\0';
+        str.resize(dotPos);
     }
 
     tm t;
     auto ptr = strptime(str.c_str(), "%Y-%m-%dT%H:%M:%S", &t);
-    if (ptr != str.data() + str.size()) {
+    if (ptr == nullptr || (*ptr != '\0' && *ptr != 'Z')) {
         return Err("Invalid date time format '{}'", str);
     }
-    auto time = timegm(&t);
-    return Ok(std::chrono::system_clock::time_point(std::chrono::seconds(time)));
-}
+
+    return Ok(static_cast<uint64_t>(timegm(&t)));
 #endif
+}
 
 static std::string readISOTimestamp(matjson::Value const& value) {
     auto res = value.asString();
@@ -271,7 +270,7 @@ static std::string readISOTimestamp(matjson::Value const& value) {
         return "Unknown";
     }
 
-    auto tm = geode::localtime(std::chrono::system_clock::to_time_t(timeRes.unwrap()));
+    auto tm = geode::localtime(timeRes.unwrap());
     return fmt::format("{:%Y-%m-%d %H:%M:%S}", tm);
 }
 
