@@ -235,7 +235,6 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
 
 // adapted from
 // https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
-
 static Result<uint64_t> parseISOTimestamp(std::string str) {
 #ifdef GEODE_IS_WINDOWS
     std::stringstream ss(str);
