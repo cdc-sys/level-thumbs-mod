@@ -1,6 +1,7 @@
 # v2.0.0
 - Full mod rewrite (credits to Prevter)
 - In-game thumbnail submission!
+- 2.208 port
 
 # v1.3.0
 - Added 'Level thumbnails url' setting

@@ -7,6 +7,7 @@
 #include <Geode/modify/AccountHelpLayer.hpp>
 #include <Geode/ui/Notification.hpp>
 #include <Geode/utils/web.hpp>
+#include <Geode/loader/SettingV3.hpp>
 
 using namespace geode::prelude;
 
@@ -90,7 +91,15 @@ AuthManager::LoginFuture AuthManager::login() {
         co_return Err("not logged into an account");
     }
 
-    auto argonRes = co_await argon::startAuth();
+    auto data = co_await async::waitForMainThread<argon::AccountData>([] {
+        return argon::getGameAccountData();
+    });
+
+    if (!data->valid()) {
+        co_return Err("argon - invalid game data");
+    }
+
+    auto argonRes = co_await argon::startAuth(data.value());
     if (!argonRes) {
         co_return Err(std::move(argonRes).unwrapErr());
     }
@@ -130,3 +139,9 @@ class $modify(AccountHelpLayer) {
         AccountHelpLayer::FLAlert_Clicked(p0, p1);
     }
 };
+
+$execute {
+    listenForSettingChanges<std::string>("level-thumbnails-api", [](std::string value) {
+        Mod::get()->getSaveContainer().erase("token");
+    });
+}
