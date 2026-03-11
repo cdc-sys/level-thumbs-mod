@@ -6,7 +6,7 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v2.0.0",
+    "version": "v2.0.1",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -53,6 +53,12 @@
         "enable-thumbnail-taking": {
             "name": "In-Game Thumbnail Taking",
             "description": "Enables the ability to take thumbnails and upload them to the server from the pause menu.",
+            "type": "bool",
+            "default": false
+        },
+        "always-show-accurate-stamps": {
+            "name": "Always Show Accurate Timestamps",
+            "description": "Makes the thumbnail popup always show the accurate timestamp next to the relative one.",
             "type": "bool",
             "default": false
         },

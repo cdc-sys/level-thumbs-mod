@@ -1,7 +1,15 @@
+# v2.0.1
+- Improved timestamp parsing.
+- Newer argon version to fix an obscure issue on mac.
+
 # v2.0.0
 - Full mod rewrite (credits to Prevter)
 - In-game thumbnail submission!
 - 2.208 port
+- (forgotten) Added timestamp parsing.
+- (forgotten) Fixed an exploit related to other servers being able to grab your token.
+- (forgotten) Re-enabled disk cache.
+- (forgotten) More descriptive request errors.
 
 # v1.3.0
 - Added 'Level thumbnails url' setting

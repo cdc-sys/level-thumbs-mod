@@ -9,6 +9,7 @@
 #include <Geode/ui/TextArea.hpp>
 #include <Geode/utils/web.hpp>
 #include "ConfirmAlertLayer.hpp"
+#include "Geode/utils/general.hpp"
 #include "LoadingOverlay.hpp"
 
 using namespace geode::prelude;
@@ -233,6 +234,39 @@ void ThumbnailPopup::onDownloadError(std::string const& error) {
     m_loadingCircle->fadeAndRemove();
 }
 
+inline std::string toAgoString(int timestamp) {
+    auto const fmtPlural = [](auto count, auto unit) {
+        if (count == 1) {
+            return fmt::format("{} {} ago", count, unit);
+        }
+        return fmt::format("{} {}s ago", count, unit);
+    };
+    auto value = std::chrono::seconds(timestamp);
+    auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
+    auto localtime = geode::localtime(timestamp);
+    auto len = std::chrono::duration_cast<std::chrono::seconds>(now - value).count();
+    if (len < 60) {
+        return fmtPlural(len, "second");
+    }
+    len = std::chrono::duration_cast<std::chrono::minutes>(now - value).count();
+    if (len < 60) {
+        return fmtPlural(len, "minute");
+    }
+    len = std::chrono::duration_cast<std::chrono::hours>(now - value).count();
+    if (len < 24) {
+        return fmtPlural(len, "hour");
+    }
+    len = std::chrono::duration_cast<std::chrono::days>(now - value).count();
+    if (len < 31) {
+        return fmt::format("{} at {:%H:%M}",fmtPlural(len, "day"),localtime);
+    }
+    len = std::chrono::duration_cast<std::chrono::weeks>(now - value).count();
+    if (len < 4) {
+        return fmt::format("{} at {:%H:%M}",fmtPlural(len, "week"),localtime);
+    }
+    return "";
+}
+
 // adapted from
 // https://github.com/geode-sdk/geode/blob/2f390747385b2c7fcf15b606df10f87d671f3929/loader/src/server/Server.cpp#L262
 static Result<uint64_t> parseISOTimestamp(std::string str) {
@@ -263,14 +297,27 @@ static std::string readISOTimestamp(matjson::Value const& value) {
     auto res = value.asString();
     if (!res) return "Unknown";
 
-    auto timeRes = parseISOTimestamp(std::move(res).unwrap());
+    auto timeStr = std::move(res).unwrap();
+    auto timeRes = parseISOTimestamp(timeStr);
     if (!timeRes) {
-        log::warn("{}", timeRes.unwrapErr());
-        return "Unknown";
+        //log::warn("{}", timeRes.unwrapErr());
+        //return "Unknown";
+        return timeStr;
     }
 
-    auto tm = geode::localtime(timeRes.unwrap());
-    return fmt::format("{:%Y-%m-%d %H:%M:%S}", tm);
+    auto time_int = timeRes.unwrap();
+    auto tm = geode::localtime(time_int);
+    auto ago_string = toAgoString(time_int);
+
+    if (!ago_string.empty()) {
+        if (Mod::get()->getSettingValue<bool>("always-show-accurate-stamps")) {
+            return fmt::format("{} ({:%Y-%m-%d at %H:%M})", ago_string, tm);
+        } else {
+            return ago_string;
+        }
+    } else {
+        return fmt::format("{:%Y-%m-%d at %H:%M}", tm);
+    }
 }
 
 void ThumbnailPopup::loadThumbnailInfo() {
@@ -330,10 +377,10 @@ void ThumbnailPopup::loadThumbnailInfo() {
             textArea->setVisible(true);
             textArea->setText(fmt::format(
                 "Submitted by: {}\n"
-                "Submitted at: {}\n"
-                "First submitted at: {}\n"
+                "Submitted: {}\n"
+                "First submitted: {}\n"
                 "Accepted by: {}\n"
-                "Accepted at: {}",
+                "Accepted: {}",
                 uploader, upload_time,
                 first_upload_time, accepter,
                 accepted_time
