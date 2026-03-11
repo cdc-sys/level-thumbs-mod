@@ -1,3 +1,6 @@
+# v2.0.2
+- Change how timestamps are formatted again.
+
 # v2.0.1
 - Improved timestamp parsing.
 - Newer argon version to fix an obscure issue on mac.

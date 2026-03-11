@@ -241,6 +241,10 @@ inline std::string toAgoString(int timestamp) {
         }
         return fmt::format("{} {}s ago", count, unit);
     };
+    auto const doSemiAccurate = [] (auto normal_ago, auto localtime) {
+        // for customizability later on, right now it is just a passthrough
+        return fmt::format("{}",normal_ago);
+    };
     auto value = std::chrono::seconds(timestamp);
     auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
     auto localtime = geode::localtime(timestamp);
@@ -258,11 +262,19 @@ inline std::string toAgoString(int timestamp) {
     }
     len = std::chrono::duration_cast<std::chrono::days>(now - value).count();
     if (len < 31) {
-        return fmt::format("{} at {:%H:%M}",fmtPlural(len, "day"),localtime);
+        return doSemiAccurate(fmtPlural(len, "day"),localtime);
     }
     len = std::chrono::duration_cast<std::chrono::weeks>(now - value).count();
     if (len < 4) {
-        return fmt::format("{} at {:%H:%M}",fmtPlural(len, "week"),localtime);
+        return doSemiAccurate(fmtPlural(len, "week"),localtime);
+    }
+    len = std::chrono::duration_cast<std::chrono::months>(now - value).count();
+    if (len < 12) {
+        return doSemiAccurate(fmtPlural(len, "month"),localtime);
+    }
+    len = std::chrono::duration_cast<std::chrono::years>(now - value).count();
+    if (len >= 1) {
+        return doSemiAccurate(fmtPlural(len, "year"),localtime);
     }
     return "";
 }
