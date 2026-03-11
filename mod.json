@@ -60,7 +60,7 @@
             "name": "Always Show Accurate Timestamps",
             "description": "Makes the thumbnail popup always show the accurate timestamp next to the relative one.",
             "type": "bool",
-            "default": false
+            "default": true
         },
         "cache-title": {
             "name": "Caching",
