@@ -1,6 +1,7 @@
 #include "AuthManager.hpp"
 #include "ThumbnailManager.hpp"
 
+#include <Geode/Result.hpp>
 #include <matjson.hpp>
 #include <string>
 #include <argon/argon.hpp>
@@ -52,9 +53,20 @@ AuthManager::UploadFuture AuthManager::uploadThumbnail(std::string_view filename
     }
 
     if (code == 401) Mod::get()->getSaveContainer().erase("token");
+    else if (code == 423) {
+        auto reason_res = res.json().unwrapOrDefault()["reason"].asString();
+        if (reason_res) {
+            co_return Err(fmt::format(
+            "Submissions are currently locked for this level.\n<cy>Reason: {}</c>",
+                res.json().unwrapOrDefault()["reason"].asString().unwrapOr("auth error")
+            ));
+        } else {
+            co_return Err("Submissions are currently locked for this level.");
+        }
+    }
     log::error("{}", res.string().unwrapOrDefault());
     co_return Err(fmt::format(
-        "Thumbnail upload failed: {}",
+        "<cr>Thumbnail upload failed: {}</c>",
         res.json().unwrapOrDefault()["message"].asString().unwrapOr("auth error")
     ));
 }
