@@ -167,10 +167,8 @@ class $modify(ThumbnailLevelCell, LevelCell) {
             ThumbnailManager::get().fetchThumbnail(
                 m_level->m_levelID,
                 ThumbnailManager::Quality::Small,
-                [self = WeakRef(this)](web::WebProgress const& progress) {
-                    if (auto s = self.lock()) {
-                        s->updateProgressLabel(progress.downloadProgress().value_or(0.f));
-                    }
+                [this](web::WebProgress const& progress) {
+                    this->updateProgressLabel(progress.downloadProgress().value_or(0.f));
                 }
             ),
             [this](ThumbnailManager::FetchResult res) {
