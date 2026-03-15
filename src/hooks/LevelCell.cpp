@@ -3,7 +3,6 @@
 
 #include "../managers/SettingsManager.hpp"
 #include "../managers/ThumbnailManager.hpp"
-#include "../layers/ConfirmAlertLayer.hpp"
 
 using namespace geode::prelude;
 
