@@ -1,3 +1,7 @@
+# v2.0.3
+- Crash fix.
+- Thumbnail lock feedback that shows reasoning as well.
+
 # v2.0.2
 - Change how timestamps are formatted again.
 
