@@ -1,10 +1,7 @@
-name: Build Geode Mod
+name: Release the version
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "**"
 
 jobs:
   build:
@@ -58,3 +55,21 @@ jobs:
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
+
+      - uses: actions/checkout@v6
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' mod.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.version }}
+          files: |
+            ${{ steps.build.outputs.build-output }}/*.geode
+            ${{ steps.build.outputs.build-output }}/*.pdb
+            ${{ steps.build.outputs.build-output }}/*.sym
