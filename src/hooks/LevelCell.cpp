@@ -9,6 +9,7 @@ using namespace geode::prelude;
 class $modify(ThumbnailLevelCell, LevelCell) {
     struct Fields {
         TaskHolder<ThumbnailManager::FetchResult> m_fetchListener;
+        std::shared_ptr<std::monostate> m_cancelToken = std::make_shared<std::monostate>();
         CCLabelBMFont* m_progressLabel = nullptr;
         LoadingSpinner* m_spinner = nullptr;
         CCClippingNode* m_clippingNode = nullptr;
@@ -166,7 +167,8 @@ class $modify(ThumbnailLevelCell, LevelCell) {
             ThumbnailManager::get().fetchThumbnail(
                 m_level->m_levelID,
                 ThumbnailManager::Quality::Small,
-                [this](web::WebProgress const& progress) {
+                [this, token = std::weak_ptr(fields->m_cancelToken)](web::WebProgress const& progress) {
+                    if (token.expired()) return;
                     this->updateProgressLabel(progress.downloadProgress().value_or(0.f));
                 }
             ),
