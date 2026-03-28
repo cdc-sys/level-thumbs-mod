@@ -1,3 +1,6 @@
+# v2.0.4
+- Another crash fix
+
 # v2.0.3
 - Crash fix.
 - Thumbnail lock feedback that shows reasoning as well.
