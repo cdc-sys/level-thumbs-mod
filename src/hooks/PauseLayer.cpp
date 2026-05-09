@@ -1,34 +1,13 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include "../layers/ThumbnailPopup.hpp"
 #include "../managers/SettingsManager.hpp"
+#include "../utils/MegaHackCompat.hpp"
+#include "../utils/NodeHider.hpp"
 #include "../utils/RenderTexture.hpp"
 
 #include <prevter.imageplus/include/api.hpp>
 
 using namespace geode::prelude;
-
-struct HideNode {
-    CCNode* node = nullptr;
-    bool wasVisible = false;
-
-    HideNode(CCNode* parent, std::string_view id) {
-        if (parent) {
-            node = parent->getChildByID(id);
-            if (node) {
-                wasVisible = node->isVisible();
-                node->setVisible(false);
-            }
-        }
-    }
-
-    ~HideNode() {
-        if (node) {
-            node->setVisible(wasVisible);
-        }
-    }
-};
-
-#define HIDE_NODE(parent, id) HideNode GEODE_CONCAT(hide_, __COUNTER__)(parent, id);
 
 struct UIObjectState {
     GameObject* object;
@@ -91,6 +70,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
+                GEODE_MOBILE("This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active.")
                 "Please enable it in the settings and try again.",
                 "OK"
             )->show();
@@ -102,6 +82,13 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
+        // hide UI stuff
+        HIDE_NODE2(playLayer->m_uiLayer);
+        HIDE_NODE2(playLayer->m_percentageLabel);
+        HIDE_NODE2(playLayer->m_progressBar);
+        HIDE_NODE2(playLayer->m_attemptLabel);
+
+        // mods
         HIDE_NODE(playLayer, "mat.run-info/RunInfoWidget");
         HIDE_NODE(playLayer, "cheeseworks.speedruntimer/timer");
         HIDE_NODE(playLayer, "sawblade.dim_mode/opacityLabel");
@@ -110,6 +97,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "zilko.xdbot/recording-audio-label");
         HIDE_NODE(playLayer, "zilko.xdbot/button-menu");
         HIDE_NODE(playLayer, "dankmeme.globed2/game-overlay");
+        HIDE_NODE(playLayer->m_objectLayer, "dankmeme.globed2/player-node");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top_left");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top_right");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom_left");
@@ -117,14 +105,14 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
 
+        // megahack imo
+        HIDE_NODE2(playLayer->getChildByType<core::Poller>(0));
+        HIDE_NODE2(playLayer->getChildByType<status::Manager>(0));
+        HIDE_NODE2(playLayer->getChildByType<ShowTrajectory>(0));
+        HIDE_NODE2(playLayer->getChildByType<NoclipTint>(0));
+
         auto oldScale = playLayer->getScaleY();
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
-        auto uiLayerVisible = playLayer->m_uiLayer->isVisible();
-        playLayer->m_uiLayer->setVisible(false);
-        auto percentage = playLayer->m_percentageLabel->isVisible();
-        playLayer->m_percentageLabel->setVisible(false);
-        auto progressBarVisible = playLayer->m_progressBar->isVisible();
-        playLayer->m_progressBar->setVisible(false);
 
         auto shader = playLayer->m_shaderLayer;
         bool hadShader = shader->getParent() != nullptr;
@@ -175,9 +163,6 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         playLayer->setScaleY(oldScale);
-        playLayer->m_uiLayer->setVisible(uiLayerVisible);
-        playLayer->m_percentageLabel->setVisible(percentage);
-        playLayer->m_progressBar->setVisible(progressBarVisible);
         revertUIObjects(playLayer, uiObjects);
         if (hadShader) {
             shader->m_screenSize = oldScreenSize;
