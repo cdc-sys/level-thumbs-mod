@@ -52,7 +52,7 @@ AuthManager::UploadFuture AuthManager::uploadThumbnail(std::string_view filename
         co_return Ok("The thumbnail has been submitted, and is now in the queue for approval.");
     }
 
-    if (code == 401) Mod::get()->getSaveContainer().erase("token");
+    if (code == 401 || code == 403) Mod::get()->getSaveContainer().erase("token");
     else if (code == 423) {
         auto reason_res = res.json().unwrapOrDefault()["reason"].asString();
         if (reason_res) {
