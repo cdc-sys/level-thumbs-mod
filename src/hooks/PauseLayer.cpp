@@ -9,35 +9,9 @@
 
 using namespace geode::prelude;
 
-struct UIObjectState {
-    GameObject* object;
-    CCPoint oldStartPos;
-    CCPoint originalStartPos;
-    CCPoint position;
-};
-
-static std::vector<UIObjectState> fixUIObjects(PlayLayer* pl) {
-    std::vector<UIObjectState> uiObjects;
-
-    for (auto obj : geode::cocos::CCArrayExt<GameObject*>(pl->m_objects)) {
-        auto it = pl->m_uiObjectPositions.find(obj->m_uniqueID);
-        if (it == pl->m_uiObjectPositions.end()) continue;
-        uiObjects.push_back({obj, obj->m_startPosition, it->second, obj->getPosition()});
-        obj->setStartPos(it->second);
-    }
-
-    pl->positionUIObjects();
-
-    return uiObjects;
-}
-
-static void revertUIObjects(PlayLayer* pl, std::vector<UIObjectState> const& uiObjects) {
-    for (auto const& state : uiObjects) {
-        state.object->setStartPos(state.oldStartPos);
-        state.object->setPosition(state.position);
-    }
-
-    pl->positionUIObjects();
+static bool sizesMatch(CCSize const& a, CCSize const& b) {
+    constexpr float EPSILON = 0.1f;
+    return std::abs(a.width - b.width) < EPSILON && std::abs(a.height - b.height) < EPSILON;
 }
 
 class $modify(ThumbnailPauseLayer, PauseLayer) {
@@ -132,11 +106,13 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
 
         auto shader = playLayer->m_shaderLayer;
-        bool hadShader = shader->getParent() != nullptr;
+        bool hadShader = shader->getParent() != nullptr && shader->m_targetTextureSize != CCSize{1920, 1080};
         CCSize oldScreenSize{};
+        CCSize oldShaderTargetTextureSize = shader->m_targetTextureSize;
 
-        std::vector<UIObjectState> uiObjects;
         std::unique_ptr<uint8_t[]> data;
+        std::optional<CCPoint> oldUILayerPos = std::nullopt;
+        bool aspectMatches = false;
         bool pixelateHardEdges = false;
         {
             auto oldWinSize = CCDirector::get()->getWinSize();
@@ -145,20 +121,30 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             rt.begin();
 
             auto newWinSize = CCDirector::get()->getWinSize();
+            aspectMatches = sizesMatch(oldWinSize, newWinSize);
 
-            // TODO: maybe don't do this if aspect ratio is the same?
+            if (!aspectMatches) {
+                playLayer->m_calculateTargetHeightOffset = true;
+                playLayer->m_updateGroundShadows = true;
 
-            playLayer->m_calculateTargetHeightOffset = true;
-            playLayer->m_updateGroundShadows = true;
+                playLayer->updateCamera(0.f);
 
-            playLayer->updateCamera(0.f);
-            uiObjects = fixUIObjects(playLayer);
+                // ui trigger layer
+                if (auto uiTriggerLayer = playLayer->m_uiTriggerUI) {
+                    if (uiTriggerLayer->getChildrenCount() > 0) {
+                        auto delta = newWinSize - oldWinSize;
+                        oldUILayerPos = uiTriggerLayer->getPosition();
+                        uiTriggerLayer->setPosition(uiTriggerLayer->getPosition() + delta);
+                    }
+                }
+            }
 
             if (hadShader) {
                 // fix shaderlayer
                 pixelateHardEdges = shader->m_state.m_pixelateHardEdges;
                 oldScreenSize = shader->m_screenSize;
                 shader->m_screenSize = newWinSize;
+                shader->m_targetTextureSize = CCSize{1920, 1080};
                 shader->setupShader(false);
                 if (!pixelateHardEdges) {
                     ccTexParams a = {GL_LINEAR,GL_LINEAR};
@@ -168,27 +154,33 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
                 playLayer->updateShaderLayer(0.f);
             }
 
-            playLayer->updateVisibility(0.f);
+            if (!aspectMatches) playLayer->preUpdateVisibility(0.f);
             playLayer->visit();
 
-            // mark as dirty again
-            playLayer->m_updateGroundShadows = true;
-            playLayer->m_calculateTargetHeightOffset = true;
+            if (!aspectMatches) {
+                // mark as dirty again
+                playLayer->m_updateGroundShadows = true;
+                playLayer->m_calculateTargetHeightOffset = true;
+            }
 
             data = rt.getData();
             rt.end();
         }
 
         playLayer->setScaleY(oldScale);
-        revertUIObjects(playLayer, uiObjects);
         if (hadShader) {
             shader->m_screenSize = oldScreenSize;
+            shader->m_targetTextureSize = oldShaderTargetTextureSize;
             shader->setupShader(false);
             if (!pixelateHardEdges) {
                 ccTexParams a = {GL_LINEAR, GL_LINEAR};
                 shader->m_sprite->getTexture()->setTexParameters(&a);
             }
             shader->prePixelateShader();
+        }
+
+        if (!aspectMatches && oldUILayerPos) {
+            playLayer->m_uiTriggerUI->setPosition(*oldUILayerPos);
         }
 
         if (!data) {
