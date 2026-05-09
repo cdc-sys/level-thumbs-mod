@@ -1,3 +1,14 @@
+# v2.1.0
+- Hide Globed and MegaHack overlays when taking thumbnails.
+- Hide attempt counter when taking thumbnails.
+- Fixed daily cells not scaling up when opened second time.
+- Fixed compatibility with Globed featured levels.
+- Added a warning when trying to take a thumbnail very close to the start of the level.
+- Added a note for mobile users to install "High Graphics on Mobile" mod.
+- Fixed Area trigger related issues with thumbnails.
+- Fixed most UI trigger related issues with thumbnails.
+- Handle "User not found" error when submitting properly.
+
 # v2.0.4
 - Another crash fix
 
