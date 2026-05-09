@@ -41,6 +41,10 @@ static void revertUIObjects(PlayLayer* pl, std::vector<UIObjectState> const& uiO
 }
 
 class $modify(ThumbnailPauseLayer, PauseLayer) {
+    struct Fields {
+        bool m_shownCloseToStartWarning = false;
+    };
+
     void customSetup() {
         PauseLayer::customSetup();
 
@@ -70,7 +74,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
-                GEODE_MOBILE("This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active.")
+                GEODE_MOBILE("This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active.\n")
                 "Please enable it in the settings and try again.",
                 "OK"
             )->show();
@@ -79,6 +83,19 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
 
         auto playLayer = PlayLayer::get();
         if (!playLayer) {
+            return;
+        }
+
+        constexpr double MIN_TIME = 5.0;
+        if (playLayer->m_gameState.m_levelTime < MIN_TIME && !m_fields->m_shownCloseToStartWarning) {
+            m_fields->m_shownCloseToStartWarning = true;
+            FLAlertLayer::create(
+                "Warning",
+                "You are trying to take a screenshot <cy>very close to level start</c>!\n"
+                "There's a high chance it will be <cr>rejected</c> by moderators, "
+                "only proceed if you're sure there are no better places to take the screenshot.",
+                "OK"
+            )->show();
             return;
         }
 
