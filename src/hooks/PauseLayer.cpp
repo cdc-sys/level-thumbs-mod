@@ -48,8 +48,8 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
-                GEODE_MOBILE("This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active.\n")
-                "Please enable it in the settings and try again.",
+                "Please enable it in the Geometry Dash settings and try again."
+                GEODE_MOBILE(" This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active."),
                 "OK"
             )->show();
             return;
