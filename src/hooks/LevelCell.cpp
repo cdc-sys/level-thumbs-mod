@@ -6,6 +6,8 @@
 
 using namespace geode::prelude;
 
+namespace globed { class NewLevelCell : public LevelCell {}; }
+
 class $modify(ThumbnailLevelCell, LevelCell) {
     struct Fields {
         TaskHolder<ThumbnailManager::FetchResult> m_fetchListener;
@@ -56,20 +58,29 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         }
     }
 
-    void fixDailyCell() {
+    void fixDailyCell(bool isGlobed) {
         constexpr float dailyMult = 1.22;
 
         auto fields = m_fields.self();
 
+        float globedOffset = isGlobed ? -2.f : 0.f;
+
         fields->m_separator->setScaleX(0.45 * dailyMult);
         fields->m_separator->setScaleY(dailyMult);
-        fields->m_separator->setPosition({m_backgroundLayer->getContentWidth() - (fields->m_separator->getContentWidth() * dailyMult)/2 - 20 + 7, -7.9f});
+        fields->m_separator->setPosition({
+            m_backgroundLayer->getContentWidth() - (fields->m_separator->getContentWidth() * dailyMult) / 2 - 20 + 7 + globedOffset,
+            -7.9f + globedOffset
+        });
         fields->m_clippingNode->setScale(dailyMult);
-        fields->m_clippingNode->setPosition(fields->m_clippingNode->getPosition().x + 7, -7.9f);
+        fields->m_clippingNode->setPosition(fields->m_clippingNode->getPosition().x + 7 + globedOffset, -7.9f + globedOffset);
+
+        if (isGlobed) {
+            this->scheduleOnce(schedule_selector(ThumbnailLevelCell::fixGlobedCell), 0.f);
+            return;
+        }
 
         auto parent = getParent();
         if (!parent) return;
-
         if (auto bg = typeinfo_cast<CCScale9Sprite*>(parent->getChildByID("background"))){
             NineSlice* border = NineSlice::create("GJ_square07.png");
             border->setContentSize(bg->getContentSize());
@@ -83,6 +94,18 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         if (auto node = parent->getChildByID("crown-sprite")){
             node->setZOrder(6);
         }
+    }
+
+    void fixGlobedCell(float) {
+        auto parent = getParent();
+        if (!parent) return;
+
+        NineSlice* border = NineSlice::create("GJ_square07.png");
+        border->setContentSize(parent->getContentSize());
+        border->setPosition(parent->getContentSize() * 0.5f);
+        border->setZOrder(5);
+        border->setID("border"_spr);
+        parent->addChild(border);
     }
 
     void onDownloadSuccess(Ref<CCTexture2D> const& texture) {
@@ -140,8 +163,10 @@ class $modify(ThumbnailLevelCell, LevelCell) {
         this->addChild(clippingNode);
 
         auto parent = getParent();
-        if (typeinfo_cast<DailyLevelNode*>(parent) || typeinfo_cast<CCScale9Sprite*>(parent)){
-            this->fixDailyCell();
+        if (m_level->m_dailyID > 0 || typeinfo_cast<DailyLevelNode*>(parent)) {
+            this->fixDailyCell(false);
+        } else if (typeinfo_cast<globed::NewLevelCell*>(this)) {
+            this->fixDailyCell(true);
         }
     }
 
