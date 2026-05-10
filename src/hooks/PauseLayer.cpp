@@ -1,4 +1,6 @@
 #include <Geode/modify/PauseLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
+
 #include "../layers/ThumbnailPopup.hpp"
 #include "../managers/SettingsManager.hpp"
 #include "../utils/MegaHackCompat.hpp"
@@ -8,6 +10,39 @@
 #include <prevter.imageplus/include/api.hpp>
 
 using namespace geode::prelude;
+
+class $modify(NoclipTesterPlayLayer, PlayLayer) {
+    struct Fields { std::optional<uint32_t> lastDeathTick; };
+
+    static void onModify(auto& self) {
+        (void) self.setHookPriority("PlayLayer::destroyPlayer", -0x600000);
+    }
+
+    bool isCurrentlyDead() {
+        if (m_playerDied || m_player1->m_isDead) return true;
+
+        auto& fields = *m_fields.self();
+        if (fields.lastDeathTick.has_value()) {
+            constexpr uint32_t DEATH_TICK_TIMEOUT = 10; // ~20ms window
+            if (m_gameState.m_currentProgress - fields.lastDeathTick.value() <= DEATH_TICK_TIMEOUT) {
+                return true;
+            }
+
+            fields.lastDeathTick.reset();
+        }
+
+        return false;
+    }
+
+    void destroyPlayer(PlayerObject* player, GameObject* object) override {
+        if (object != m_anticheatSpike) {
+            m_fields->lastDeathTick = m_gameState.m_currentProgress;
+        } else {
+            m_fields->lastDeathTick.reset();
+        }
+        PlayLayer::destroyPlayer(player, object);
+    }
+};
 
 static bool sizesMatch(CCSize const& a, CCSize const& b) {
     constexpr float EPSILON = 0.1f;
@@ -55,8 +90,28 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
+        if (GameManager::get()->m_performanceMode) {
+            FLAlertLayer::create(
+                "Screenshot Error",
+                "Thumbnails cannot be taken while <cy>Low Detail Mode</c> is enabled.\n"
+                "Please disable it in the Geometry Dash settings and try again.",
+                "OK"
+            )->show();
+            return;
+        }
+
         auto playLayer = PlayLayer::get();
         if (!playLayer) {
+            return;
+        }
+
+        if (static_cast<NoclipTesterPlayLayer*>(playLayer)->isCurrentlyDead()) {
+            FLAlertLayer::create(
+                "Screenshot Error",
+                "You cannot take a thumbnail while the player is <cr>dead</c>.\n"
+                "Please wait until you respawn and try again.",
+                "OK"
+            )->show();
             return;
         }
 
@@ -78,6 +133,42 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE2(playLayer->m_percentageLabel);
         HIDE_NODE2(playLayer->m_progressBar);
         HIDE_NODE2(playLayer->m_attemptLabel);
+        HIDE_NODE2(playLayer->m_debugDrawNode);
+        HIDE_NODE2(playLayer->m_debugDrawNode->getParent());
+        HIDE_NODE2(playLayer->m_infoLabel);
+
+        // hide respawn circles
+        std::vector<HideCircleWave> hideCircleNodes;
+        for (auto circle : playLayer->m_circleWaveArray->asExt<CCCircleWave*>()) {
+            if (circle->m_target == playLayer->m_player1) {
+                hideCircleNodes.emplace_back(circle);
+            }
+        }
+
+        // hide practice checkpoints
+        std::vector<HideGameObject> hideGameObjects;
+        if (playLayer->m_isPracticeMode) {
+            if (auto current = playLayer->m_currentCheckpoint) {
+                if (auto obj = current->m_physicalCheckpointObject) {
+                    hideGameObjects.emplace_back(obj);
+                }
+            }
+
+            for (auto checkpoint : playLayer->m_checkpointArray->asExt<CheckpointObject*>()) {
+                if (checkpoint == playLayer->m_currentCheckpoint) continue;
+                if (auto obj = checkpoint->m_physicalCheckpointObject) {
+                    hideGameObjects.emplace_back(obj);
+                }
+            }
+        }
+
+        // explode player particles
+        std::vector<HideNode> hideNodes;
+        for (auto obj : playLayer->m_objectLayer->getChildrenExt()) {
+            if (typeinfo_cast<ExplodeItemNode*>(obj)) {
+                hideNodes.emplace_back(obj);
+            }
+        }
 
         // mods
         HIDE_NODE(playLayer, "mat.run-info/RunInfoWidget");
