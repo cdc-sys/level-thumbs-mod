@@ -21,7 +21,7 @@ AuthManager& AuthManager::get() {
     return instance;
 }
 
-AuthManager::UploadFuture AuthManager::uploadThumbnail(std::string_view filename, int levelID, Function<void(ZStringView)> onProgress) {
+AuthManager::UploadFuture AuthManager::uploadThumbnail(std::string_view filename, int levelID, std::string note, Function<void(ZStringView)> onProgress) {
     if (onProgress) onProgress("Logging in...");
 
     if (!this->isLoggedIn()) {
@@ -40,6 +40,7 @@ AuthManager::UploadFuture AuthManager::uploadThumbnail(std::string_view filename
 
     auto res = co_await web::WebRequest()
         .header("Authorization", fmt::format("Bearer {}", Mod::get()->getSavedValue<std::string>("token")))
+        .header("X-Submission-Note", std::move(note))
         .body(std::move(readRes).unwrap())
         .userAgent(USER_AGENT)
         .post(fmt::format("{}/upload/{}", Settings::thumbnailAPIBaseURL(), levelID));
@@ -92,6 +93,7 @@ AuthManager::LinkFuture AuthManager::linkAccount(std::string linkSecret) {
         co_return Ok("Your account was linked successfully.");
     }
 
+    log::error("Account link failed: {}", res.string().unwrapOrDefault());
     co_return Err(fmt::format(
         "Account link failed: {}",
         res.json().unwrapOrDefault()["message"].asString().unwrapOr("auth error")

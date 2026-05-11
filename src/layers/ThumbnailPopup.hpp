@@ -11,10 +11,12 @@ protected:
     std::unordered_set<Ref<CCTouch>> m_touches;
     float m_initialDistance = 0;
     float m_initialScale = 0;
-    bool wasZooming = false;
     CCPoint m_touchMidPoint;
     int m_levelID = 0;
     float m_maxHeight = 220;
+
+    bool m_isPreview = false;
+    bool wasZooming = false;
 
     TaskHolder<ThumbnailManager::FetchResult> m_downloadListener;
     TaskHolder<web::WebResponse> m_infoListener;
@@ -28,8 +30,9 @@ protected:
     Ref<CCImage> m_image;
     CCLabelBMFont* m_theFunny = nullptr;
 
-    bool m_isPreview = false;
     std::string m_previewFileName;
+    std::string m_submissionNote;
+    std::string m_extraNote;
 
     void runSubmissionLogic();
 
@@ -41,6 +44,7 @@ protected:
     void onDownload(CCObject* sender);
     void openDiscordServerPopup(CCObject* sender);
     void onOpenFolder(CCObject* sender);
+    void onEditNote(CCObject* sender);
     void recenter(CCObject* sender);
 
     bool ccTouchBegan(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
@@ -51,5 +55,5 @@ protected:
 
 public:
     static ThumbnailPopup* create(int id, bool screenshotPreview = false);
-    static ThumbnailPopup* create(int id, std::string filename);
+    static ThumbnailPopup* create(int id, std::string filename, std::string note = "");
 };

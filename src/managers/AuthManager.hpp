@@ -24,7 +24,7 @@ public:
 
     static bool isLoggedIn();
     LoginFuture login();
-    UploadFuture uploadThumbnail(std::string_view filename, int levelID, geode::Function<void(geode::ZStringView)> onProgress = nullptr);
+    UploadFuture uploadThumbnail(std::string_view filename, int levelID, std::string note, geode::Function<void(geode::ZStringView)> onProgress = nullptr);
     LinkFuture linkAccount(std::string linkSecret);
     
     static std::string_view getToken();

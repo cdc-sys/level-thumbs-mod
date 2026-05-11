@@ -4,6 +4,7 @@
 #include <fmt/format.h>
 #include <Geode/Geode.hpp>
 #include <Geode/cocos/textures/CCTextureCache.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/LoadingSpinner.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextArea.hpp>
@@ -22,6 +23,84 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender) {
     file::openFolder(Mod::get()->getSaveDir());
     clipboard::write(fmt::to_string(this->m_levelID));
     Notification::create("Copied ID to clipboard.", nullptr)->show();
+}
+
+class EditNotePopup : public Popup {
+public:
+    static EditNotePopup* create(std::string currentNote, Function<void(std::string)> onSubmit) {
+        auto ret = new EditNotePopup();
+        if (ret->init(std::move(currentNote), std::move(onSubmit))) {
+            ret->autorelease();
+            return ret;
+        }
+        delete ret;
+        return nullptr;
+    }
+
+    bool init(std::string currentNote, Function<void(std::string)> onSubmit) {
+        if (!Popup::init(300, 170, "square01_001.png"))
+            return false;
+
+        this->setTitle("Edit submission note");
+        static_cast<AnchorLayoutOptions*>(m_title->getLayoutOptions())->setOffset({0, -25});
+
+        m_currentNote = std::move(currentNote);
+        m_onSubmit = std::move(onSubmit);
+
+        auto label = CCLabelBMFont::create(
+            "Attach an optional note to your submission.\nIt will be visible to thumbnail moderators.",
+            "chatFont.fnt",
+            280.f, kCCTextAlignmentCenter
+        );
+        label->setScale(0.9f);
+        m_mainLayer->addChildAtPosition(label, Anchor::Center, {0, 25});
+
+        auto textInput = TextInput::create(250, "Enter submission note...", "bigFont.fnt");
+        textInput->setString(m_currentNote);
+        textInput->setCallback([this](auto& str){
+            m_currentNote = str;
+        });
+
+        m_mainLayer->addChildAtPosition(textInput, Anchor::Bottom, {0, 70});
+
+        auto submitBtn = Button::createWithNode(
+            ButtonSprite::create("Submit"),
+            [this](auto) {
+                if (m_onSubmit) m_onSubmit(std::move(m_currentNote));
+                this->onClose(nullptr);
+            }
+        );
+
+        auto cancelBtn = Button::createWithNode(
+            ButtonSprite::create("Cancel"),
+            [this](auto) {
+                this->onClose(nullptr);
+            }
+        );
+
+        m_mainLayer->addChildAtPosition(cancelBtn, Anchor::Bottom, {-60, 32});
+        m_mainLayer->addChildAtPosition(submitBtn, Anchor::Bottom, {60, 32});
+
+        m_mainLayer->updateLayout();
+
+        return true;
+    }
+
+private:
+    Function<void(std::string)> m_onSubmit;
+    std::string m_currentNote;
+};
+
+void ThumbnailPopup::onEditNote(CCObject* sender) {
+    EditNotePopup::create(
+        m_extraNote,
+        [self = WeakRef(this)](std::string newNote){
+            if (auto s = self.lock()) {
+                s->m_extraNote = std::move(newNote);
+                log::info("X-Submission-Note: {}m={}", s->m_submissionNote, s->m_extraNote);
+            }
+        }
+    )->show();
 }
 
 void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
@@ -67,7 +146,7 @@ void ThumbnailPopup::runSubmissionLogic() {
     load->show();
     m_uploadListener.spawn(
         AuthManager::get().uploadThumbnail(
-            m_previewFileName, m_levelID,
+            m_previewFileName, m_levelID, fmt::format("{}m={}", m_submissionNote, m_extraNote),
             [load](ZStringView progress) {
                 queueInMainThread([load, progress] {
                     load->changeStatus(progress.c_str());
@@ -186,6 +265,13 @@ bool ThumbnailPopup::init(int id) {
     } else {
         CCTextureCache::get()->removeTextureForKey(this->m_previewFileName.c_str());
         this->onDownloadSuccess(Ref<CCTexture2D>(CCSprite::create(this->m_previewFileName.c_str())->getTexture()));
+
+        auto editNoteBtn = CCMenuItemSpriteExtra::create(
+            CCSprite::createWithSpriteFrameName("GJ_viewLevelsBtn_001.png"),
+            this, menu_selector(ThumbnailPopup::onEditNote)
+        );
+        editNoteBtn->setPosition({m_mainLayer->getContentWidth(), 6});
+        m_buttonMenu->addChild(editNoteBtn);
     }
 
     this->setMouseEnabled(true);
@@ -418,9 +504,10 @@ ThumbnailPopup* ThumbnailPopup::create(int id, bool screenshotPreview) {
     return nullptr;
 }
 
-ThumbnailPopup* ThumbnailPopup::create(int id, std::string filename) {
+ThumbnailPopup* ThumbnailPopup::create(int id, std::string filename, std::string note) {
     auto ret = new ThumbnailPopup();
     ret->m_previewFileName = std::move(filename);
+    ret->m_submissionNote = std::move(note);
     ret->m_isPreview = true;
     ret->m_levelID = id;
     if (ret->init(-1)) {
