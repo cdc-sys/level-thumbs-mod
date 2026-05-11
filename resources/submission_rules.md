@@ -12,7 +12,7 @@
 
 7. Hitboxes, death effects, and spawn effects are not allowed.
 
-8. You cannot be visibly noclipping, you can noclip as long as the icon is in the main part of the level and isn't in a hitbox.
+8. You cannot be close to death in your thumbnail.
 
 9. Avoid submitting the first couple percentages of the level if possible, please use an actually good part in the level, show the best/most fun looking part.
 
