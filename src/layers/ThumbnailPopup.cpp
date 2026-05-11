@@ -188,6 +188,8 @@ bool ThumbnailPopup::init(int id) {
         this->onDownloadSuccess(Ref<CCTexture2D>(CCSprite::create(this->m_previewFileName.c_str())->getTexture()));
     }
 
+    this->setMouseEnabled(true);
+
     return true;
 }
 
@@ -521,4 +523,26 @@ void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
         wasZooming = false;
     }
     //geode::log::info("ended");
+}
+
+void ThumbnailPopup::scrollWheel(float y, float x) {
+    CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
+    if (!thumbnail) return;
+
+    constexpr float zoomSpeed = 0.01f;
+
+    float oldScale = thumbnail->getScale();
+    float newScale = oldScale * std::pow(1.f + zoomSpeed, -y);
+    newScale = clip(newScale, 0.25f, 6.f);
+
+    if (std::abs(newScale - oldScale) < 0.0001f)
+        return;
+
+    CCPoint mouseWorld = getMousePos();
+    CCPoint localBefore = thumbnail->convertToNodeSpace(mouseWorld);
+    thumbnail->setScale(newScale);
+
+    CCPoint worldAfter = thumbnail->convertToWorldSpace(localBefore);
+    CCPoint diff = mouseWorld - worldAfter;
+    thumbnail->setPosition(thumbnail->getPosition() + diff);
 }
