@@ -365,6 +365,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         sb.append("dw={};", level->m_downloads);
         sb.append("lk={};", level->m_likes);
         sb.append("ls={};", level->m_stars);
+        sb.append("ll={};", level->m_levelLength);
         sb.append("lr={};", getLevelRating(level));
         sb.append("ld={};", getLevelDifficulty(level));
 
