@@ -1,3 +1,12 @@
+# v2.2.0
+- **Submission Notes!** Attach an optional short message to your submission to give context to the moderators.
+- Hide Practice Mode checkpoints when taking thumbnails.
+- Hide "Show Hitboxes" overlays when taking thumbnails.
+- Prevent taking thumbnails when player is dead or noclipping.
+- Add a notice when Low Detail Mode is enabled when taking thumbnails.
+- Add ability to zoom in and out using scroll wheel in thumbnail popups.
+- Added ability to compare replacement thumbnails.
+
 # v2.1.0
 - Hide Globed and MegaHack overlays when taking thumbnails.
 - Hide attempt counter when taking thumbnails.
