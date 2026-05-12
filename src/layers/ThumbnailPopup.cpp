@@ -272,6 +272,15 @@ bool ThumbnailPopup::init(int id) {
         );
         editNoteBtn->setPosition({m_mainLayer->getContentWidth(), 6});
         m_buttonMenu->addChild(editNoteBtn);
+
+        m_downloadListener.spawn(
+            ThumbnailManager::get().fetchThumbnail(m_levelID, ThumbnailManager::Quality::High),
+            [this](Result<Ref<CCTexture2D>> result) {
+                if (result.isOk()) {
+                    this->onDownloadSuccess(result.unwrap());
+                }
+            }
+        );
     }
 
     this->setMouseEnabled(true);
@@ -290,7 +299,42 @@ void ThumbnailPopup::recenter(CCObject* sender) {
     }
 }
 
+void ThumbnailPopup::enableSwapping() {
+    if (!m_thumbnail || !m_swappedTexture) return;
+
+    auto btn = Button::createWithSpriteFrameName("GJ_editModeBtn_001.png", [this](auto) {
+        auto currentTexture = m_thumbnail->getTexture();
+        currentTexture->retain();
+        m_thumbnail->setTexture(m_swappedTexture);
+        m_swappedTexture = currentTexture;
+        currentTexture->release();
+
+        m_usedSwap = !m_usedSwap;
+
+        static_cast<CCLabelBMFont*>(m_mainLayer->getChildByID("viewing-mode-label"))
+            ->setString(m_usedSwap ? "Viewing the original thumbnail" : "Viewing your screenshot");
+    });
+
+    btn->setScale(0.9f);
+    btn->setPosition({m_mainLayer->getContentSize().width, m_mainLayer->getContentSize().height});
+    btn->setID("swap-view-mode-btn");
+
+    m_buttonMenu->addChild(btn);
+
+    auto label = CCLabelBMFont::create("Viewing your screenshot", "goldFont.fnt");
+    label->setScale(0.5f);
+    label->setPosition({m_mainLayer->getContentSize().width / 2, -25.f});
+    label->setID("viewing-mode-label");
+    m_mainLayer->addChild(label);
+}
+
 void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
+    if (m_thumbnail) {
+        m_swappedTexture = texture;
+        this->enableSwapping();
+        return;
+    }
+
     // thanks for fucking this up sheepdotcom
     m_downloadBtn->setEnabled(true);
     m_downloadBtn->setColor({255,255,255});
@@ -303,6 +347,8 @@ void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
     image->setPosition({m_mainLayer->getContentWidth()/2, m_mainLayer->getContentHeight()/2});
 
     image->setID("thumbnail");
+    m_thumbnail = image;
+
     m_clippingNode->addChild(image);
     m_loadingCircle->fadeAndRemove();
 }
@@ -523,7 +569,7 @@ float clip(float n, float lower, float upper) {
 }
 
 bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
-    if (m_touches.size() == 1){
+    if (m_touches.size() == 1 && m_thumbnail){
         //geode::log::info("this is where the second touch gets added");
         //thank you matcool
         auto firstTouch = *m_touches.begin();
@@ -533,11 +579,11 @@ bool ThumbnailPopup::ccTouchBegan(CCTouch* pTouch, CCEvent* event){
 
         this->m_touchMidPoint = (firstLoc + secondLoc) / 2.f;
         // save current zoom level
-        this->m_initialScale = this->getChildByIDRecursive("thumbnail")->getScale();
+        this->m_initialScale = m_thumbnail->getScale();
         // distance between the two touches
         this->m_initialDistance = firstLoc.getDistance(secondLoc);
         // anchor point
-        auto thumbnail = this->getChildByIDRecursive("thumbnail");
+        auto thumbnail = m_thumbnail;
         auto oldAnchor = thumbnail->getAnchorPoint();
         auto worldPos = thumbnail->convertToWorldSpace({0, 0});
         auto newAnchorX = (m_touchMidPoint.x-worldPos.x) / thumbnail->getScaledContentWidth();
@@ -557,14 +603,14 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
     //geode::log::info("moved");
     if (m_touches.size() == 1){
         //geode::log::info("single touch");
-        CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
+        CCNode* thumbnail = m_thumbnail;
         if (!thumbnail) return;
         thumbnail->setPosition(thumbnail->getPosition() + pTouch->getDelta());
     }
     if (m_touches.size() == 2){
         this->wasZooming = true;
         //geode::log::info("double touch (EPIC!)");
-        CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
+        CCNode* thumbnail = m_thumbnail;
         if (!thumbnail) return;
         //thank you matcool
         auto it = m_touches.begin();
@@ -590,8 +636,8 @@ void ThumbnailPopup::ccTouchMoved(CCTouch* pTouch, CCEvent* event){
 
 void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
     m_touches.erase(pTouch);
-    if (wasZooming && m_touches.size() == 1){
-        auto thumbnail = this->getChildByIDRecursive("thumbnail");
+    if (wasZooming && m_touches.size() == 1 && m_thumbnail){
+        auto thumbnail = m_thumbnail;
         auto scale = thumbnail->getScale();
         if (scale < 0.25f){
             thumbnail->runAction(
@@ -613,7 +659,7 @@ void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
 }
 
 void ThumbnailPopup::scrollWheel(float y, float x) {
-    CCNode* thumbnail = this->getChildByIDRecursive("thumbnail");
+    CCNode* thumbnail = m_thumbnail;
     if (!thumbnail) return;
 
     constexpr float zoomSpeed = 0.01f;

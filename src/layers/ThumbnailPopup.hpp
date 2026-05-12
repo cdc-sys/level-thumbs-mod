@@ -17,6 +17,7 @@ protected:
 
     bool m_isPreview = false;
     bool wasZooming = false;
+    bool m_usedSwap = false;
 
     TaskHolder<ThumbnailManager::FetchResult> m_downloadListener;
     TaskHolder<web::WebResponse> m_infoListener;
@@ -27,7 +28,8 @@ protected:
     CCMenuItemSpriteExtra* m_infoBtn = nullptr;
     CCMenuItemToggler* m_thumbInfoBtn = nullptr;
     CCClippingNode* m_clippingNode = nullptr;
-    Ref<CCImage> m_image;
+    CCSprite* m_thumbnail = nullptr;
+    Ref<CCTexture2D> m_swappedTexture = nullptr;
     CCLabelBMFont* m_theFunny = nullptr;
 
     std::string m_previewFileName;
@@ -46,6 +48,7 @@ protected:
     void onOpenFolder(CCObject* sender);
     void onEditNote(CCObject* sender);
     void recenter(CCObject* sender);
+    void enableSwapping();
 
     bool ccTouchBegan(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
     void ccTouchMoved(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
