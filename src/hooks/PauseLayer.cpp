@@ -146,7 +146,6 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE2(playLayer->m_progressBar);
         HIDE_NODE2(playLayer->m_attemptLabel);
         HIDE_NODE2(playLayer->m_debugDrawNode);
-        HIDE_NODE2(playLayer->m_debugDrawNode->getParent());
         HIDE_NODE2(playLayer->m_infoLabel);
 
         // hide respawn circles
@@ -199,6 +198,9 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
         HIDE_NODE(playLayer,"thesillydoggo.qolmod/noclip-tint-overlay");
+        auto aboveShaderNode = playLayer->m_shaderLayer->getParent();
+        HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/hitboxes");
+        HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/show-trajectory-draw-node");
 
         // megahack & qolmod imo
         HIDE_NODE2(playLayer->getChildByType<core::Poller>(0));
