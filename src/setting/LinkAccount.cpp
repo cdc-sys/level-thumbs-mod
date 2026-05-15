@@ -24,7 +24,7 @@ struct matjson::Serialize<MyCustomEnum> {
     }
 };
 
-class MyCustomSettingV3 : public SettingBaseValueV3<MyCustomEnum> {
+class LinkAccountSetting : public SettingBaseValueV3<MyCustomEnum> {
 protected:
     bool m_splorgy = false;
 
@@ -34,8 +34,8 @@ public:
         std::string const& modID,
         matjson::Value const& json
     ) {
-        auto res = std::make_shared<MyCustomSettingV3>();
-        auto root = checkJson(json, "MyCustomSettingV3");
+        auto res = std::make_shared<LinkAccountSetting>();
+        auto root = checkJson(json, "LinkAccountSetting");
         res->parseBaseProperties(key, modID, root);
         root.has("splorgy").into(res->m_splorgy);
         root.checkUnknownKeys();
@@ -47,15 +47,15 @@ public:
 
 template <>
 struct geode::SettingTypeForValueType<MyCustomEnum> {
-    using SettingType = MyCustomSettingV3;
+    using SettingType = LinkAccountSetting;
 };
 
-class MyCustomSettingNodeV3 : public SettingValueNodeV3<MyCustomSettingV3> {
+class LinkAccountSettingNode : public SettingValueNodeV3<LinkAccountSetting> {
 protected:
     TextInput* m_linkTokenInput = nullptr;
     TaskHolder<AuthManager::LinkResult> m_linkListener;
 
-    bool init(std::shared_ptr<MyCustomSettingV3> setting, float width) {
+    bool init(std::shared_ptr<LinkAccountSetting> setting, float width) {
         if (!SettingValueNodeV3::init(std::move(setting), width))
             return false;
 
@@ -112,8 +112,8 @@ protected:
     void onToggle(CCObject* sender) {}
 
 public:
-    static MyCustomSettingNodeV3* create(std::shared_ptr<MyCustomSettingV3> setting, float width) {
-        auto ret = new MyCustomSettingNodeV3();
+    static LinkAccountSettingNode* create(std::shared_ptr<LinkAccountSetting> setting, float width) {
+        auto ret = new LinkAccountSettingNode();
         if (ret->init(std::move(setting), width)) {
             ret->autorelease();
             return ret;
@@ -123,13 +123,13 @@ public:
     }
 };
 
-SettingNodeV3* MyCustomSettingV3::createNode(float width) {
-    return MyCustomSettingNodeV3::create(
-        std::static_pointer_cast<MyCustomSettingV3>(shared_from_this()),
+SettingNodeV3* LinkAccountSetting::createNode(float width) {
+    return LinkAccountSettingNode::create(
+        std::static_pointer_cast<LinkAccountSetting>(shared_from_this()),
         width
     );
 }
 
 $execute {
-    (void)Mod::get()->registerCustomSettingType("link-account", &MyCustomSettingV3::parse);
+    (void)Mod::get()->registerCustomSettingType("link-account", &LinkAccountSetting::parse);
 }

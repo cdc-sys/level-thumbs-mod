@@ -144,6 +144,12 @@
             "description": "acc link",
             "type": "custom:link-account",
             "default": {}
+        },
+        "mod-actions": {
+            "name": "Mod Actions",
+            "description": "acc link",
+            "type": "custom:mod-actions",
+            "default": {}
         }
     },
     "dependencies": {
