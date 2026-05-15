@@ -12,4 +12,7 @@ namespace globed { class ProgressArrow : public cocos2d::CCNode {}; };
 
 // qolmod
 class HitboxNode : public cocos2d::CCNode {};
-namespace qolmod { class TrajectoryNode : public cocos2d::CCNode {}; };
+namespace qolmod { 
+    class TrajectoryNode : public cocos2d::CCNode {};
+    class CoinTracerNode : public cocos2d::CCNode {};
+};

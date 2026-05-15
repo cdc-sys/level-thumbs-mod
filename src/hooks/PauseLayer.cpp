@@ -200,13 +200,14 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
         HIDE_NODE(playLayer,"thesillydoggo.qolmod/noclip-tint-overlay");
 
-        // megahack imo
+        // megahack & qolmod imo
         HIDE_NODE2(playLayer->getChildByType<core::Poller>(0));
         HIDE_NODE2(playLayer->getChildByType<status::Manager>(0));
         HIDE_NODE2(playLayer->getChildByType<ShowTrajectory>(0));
         HIDE_NODE2(playLayer->getChildByType<NoclipTint>(0));
         HIDE_NODE2(playLayer->getChildByType<HitboxNode>(0));
         HIDE_NODE2(playLayer->getChildByType<qolmod::TrajectoryNode>(0));
+        HIDE_NODE2(playLayer->getChildByType<qolmod::CoinTracerNode>(0));
 
         auto oldScale = playLayer->getScaleY();
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
