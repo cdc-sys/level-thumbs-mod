@@ -1,4 +1,5 @@
 #include "ThumbnailPopup.hpp"
+#include <Geode/binding_arm/FLAlertLayer.hpp>
 #include <chrono>
 #include <argon/argon.hpp>
 #include <fmt/format.h>
@@ -142,6 +143,10 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
     }
 }
 void ThumbnailPopup::runSubmissionLogic() {
+    if (m_isReplacement && m_extraNote.empty()) {
+        FLAlertLayer::create(nullptr,"Error!","<cr>You must add a </c><cy>submission note</c><cr> when submitting a replacement!</c>","OK",nullptr,400)->show();
+        return;
+    }
     auto load = LoadingOverlay::create("Logging in...");
     load->show();
     m_uploadListener.spawn(
@@ -331,6 +336,7 @@ void ThumbnailPopup::enableSwapping() {
 void ThumbnailPopup::onDownloadSuccess(Ref<CCTexture2D> const& texture) {
     if (m_thumbnail) {
         m_swappedTexture = texture;
+        m_isReplacement = true;
         this->enableSwapping();
         return;
     }

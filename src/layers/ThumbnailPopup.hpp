@@ -16,6 +16,7 @@ protected:
     float m_maxHeight = 220;
 
     bool m_isPreview = false;
+    bool m_isReplacement = false;
     bool wasZooming = false;
     bool m_usedSwap = false;
 
