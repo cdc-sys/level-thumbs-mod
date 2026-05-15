@@ -398,6 +398,24 @@ void ThumbnailManager::touch(std::string_view key, bool fileCache) {
     it->second.lastAccess = std::chrono::steady_clock::now();
 }
 
+void ThumbnailManager::purgeCaches() {
+    {
+        std::unique_lock lock(m_cacheMutex);
+        m_thumbnailCache.clear();
+    }
+
+    {
+        std::unique_lock lock(m_fileCacheMutex);
+        m_fileCache.clear();
+    }
+
+    std::error_code ec;
+    std::filesystem::remove_all(getCacheDirectory(), ec);
+    if (ec) {
+        log::warn("Failed to clear thumbnail disk cache: {}", ec.message());
+    }
+}
+
 void ThumbnailManager::evictIfNeeded() {
     auto maxCacheSize = Settings::thumbnailCacheLimit();
     if (m_thumbnailCache.size() <= maxCacheSize) {

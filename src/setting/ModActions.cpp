@@ -58,7 +58,7 @@ protected:
 
         auto cacheButtonSpr = ButtonSprite::create("Clear Cache");
         auto cacheButton = CCMenuItemExt::createSpriteExtra(cacheButtonSpr, [](auto){
-            std::filesystem::remove_all(ThumbnailManager::get().getCacheDirectory());
+            ThumbnailManager::get().purgeCaches();
             geode::Notification::create("Cache Cleared",geode::NotificationIcon::Success)->show();
         });
         auto logoutButtonSpr = ButtonSprite::create("Log Out");

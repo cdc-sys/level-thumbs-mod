@@ -48,6 +48,7 @@ public:
     void cleanupFileCacheEntry(int32_t levelID, Quality quality);
 
     void saveDiskCache();
+    void purgeCaches();
 
 private:
     static ThumbnailKey getThumbnailKey(int32_t levelID, Quality quality);
