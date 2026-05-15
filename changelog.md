@@ -1,3 +1,9 @@
+# v2.3.0
+- Added a warning about Globed platformer indicators.
+- The mod now requires submission notes for replacements.
+- QolMOD nodes hidden.
+- New **Mod Actions** setting.
+
 # v2.2.0
 - **Submission Notes!** Attach an optional short message to your submission to give context to the moderators.
 - Hide Practice Mode checkpoints when taking thumbnails.
