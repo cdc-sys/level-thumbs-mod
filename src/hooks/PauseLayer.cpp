@@ -6,6 +6,8 @@
 #include "../utils/MegaHackCompat.hpp"
 #include "../utils/NodeHider.hpp"
 #include "../utils/RenderTexture.hpp"
+#include "Geode/platform/ItaniumCast.hpp"
+#include "ccTypeInfo.h"
 
 #include <prevter.imageplus/include/api.hpp>
 
@@ -126,6 +128,18 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
                 "OK"
             )->show();
             return;
+        }
+
+        for (auto child : playLayer->getChildrenExt()) {
+            if (typeinfo_cast<globed::ProgressArrow*>(child)){
+                FLAlertLayer::create(
+                    "Screenshot Error",
+                    "You are trying to take a screenshot <cy>with Globed player icons.</c>!\n"
+                    "please <cj>disconnect</c> from the <co>Globed server</c> you are currently connected to and try again.",
+                    "OK"
+                )->show();
+                return;
+            }
         }
 
         // hide UI stuff
