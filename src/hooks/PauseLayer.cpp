@@ -6,6 +6,7 @@
 #include "../utils/ModNodeCompat.hpp"
 #include "../utils/NodeHider.hpp"
 #include "../utils/RenderTexture.hpp"
+#include "../utils/UrlEncode.hpp"
 
 #include <prevter.imageplus/include/api.hpp>
 
@@ -375,7 +376,9 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
 
         // Level Info
         sb.append("v=1;");
-        sb.append("ln={};", level->m_levelName);
+        sb.append("ln=");
+        urlEncodeAppend(sb, level->m_levelName);
+        sb.append(";");
         sb.append("ci={};", level->m_accountID);
         sb.append("cn={};", level->m_creatorName);
         sb.append("dw={};", level->m_downloads);

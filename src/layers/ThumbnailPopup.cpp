@@ -12,6 +12,7 @@
 #include "ConfirmAlertLayer.hpp"
 #include "Geode/utils/general.hpp"
 #include "LoadingOverlay.hpp"
+#include "../utils/UrlEncode.hpp"
 
 using namespace geode::prelude;
 
@@ -146,11 +147,13 @@ void ThumbnailPopup::runSubmissionLogic() {
         FLAlertLayer::create(nullptr,"Error!","<cr>You must add a </c><cy>submission note</c><cr> when submitting a replacement!</c>","OK",nullptr,400)->show();
         return;
     }
+    StringBuffer noteEncodeBuffer;
+    urlEncodeAppend(noteEncodeBuffer, m_extraNote);
     auto load = LoadingOverlay::create("Logging in...");
     load->show();
     m_uploadListener.spawn(
         AuthManager::get().uploadThumbnail(
-            m_previewFileName, m_levelID, fmt::format("{}m={}", m_submissionNote, m_extraNote),
+            m_previewFileName, m_levelID, fmt::format("{}m={}", m_submissionNote, noteEncodeBuffer.str()),
             [load](ZStringView progress) {
                 queueInMainThread([load, progress] {
                     load->changeStatus(progress.c_str());
