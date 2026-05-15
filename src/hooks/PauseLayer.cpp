@@ -6,8 +6,6 @@
 #include "../utils/MegaHackCompat.hpp"
 #include "../utils/NodeHider.hpp"
 #include "../utils/RenderTexture.hpp"
-#include "Geode/platform/ItaniumCast.hpp"
-#include "ccTypeInfo.h"
 
 #include <prevter.imageplus/include/api.hpp>
 
@@ -206,6 +204,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE2(playLayer->getChildByType<status::Manager>(0));
         HIDE_NODE2(playLayer->getChildByType<ShowTrajectory>(0));
         HIDE_NODE2(playLayer->getChildByType<NoclipTint>(0));
+        HIDE_NODE2(playLayer->getChildByType<HitboxNode>(0));
 
         auto oldScale = playLayer->getScaleY();
         playLayer->setScaleY(-oldScale); // flip y-axis because opengl
