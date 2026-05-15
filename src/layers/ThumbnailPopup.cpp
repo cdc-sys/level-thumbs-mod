@@ -133,7 +133,7 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
             "No thumbnail!",
             "This level seems to not have a <cj>Thumbnail</c>...\n"
             "Don't worry, you can submit a thumbnail yourself! Open the level and click the thumbnail button in the pause menu.",
-            "No Thanks", "JOIN!",
+            "No Thanks", "Join Discord",
             [](auto, bool btn2) {
                 if (btn2) {
                     CCApplication::sharedApplication()->openURL("https://discord.gg/GuagJDsqds");
