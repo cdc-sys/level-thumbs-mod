@@ -241,7 +241,7 @@ bool ThumbnailPopup::init(int id) {
     m_infoBtn->setZOrder(3);
     m_buttonMenu->addChild(m_infoBtn);
 
-    m_theFunny = CCLabelBMFont::create(m_isPreview ? "Hiiii\ngeming\npopcorn\nskepper\nbob\nanvixo\nmoonstarmaster\ncdc\nlevel thumbnails bot\norangeyguy\ncrazytoast\nkirky bonzai\nsilly billy" : "OwO", "bigFont.fnt");
+    m_theFunny = CCLabelBMFont::create(m_isPreview ? "Hiiii\ngeming\npopcorn\nskepper\nbob\nanvixo\nmoonstarmaster\ncdc\nlevel thumbnails bot\norangeyguy\ncrazytoast\nmeowy bonzai\nelliot" : "OwO", "bigFont.fnt");
     m_theFunny->setPosition(m_bgSprite->getPosition());
     m_theFunny->setVisible(m_isPreview);
     m_theFunny->setScale(0.25f);
