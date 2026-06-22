@@ -2,7 +2,7 @@
 
 RenderTexture::RenderTexture(uint32_t width, uint32_t height) : m_width(width), m_height(height) {
     // create texture
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     glGenTextures(1, &m_texture);
 
     glBindTexture(GL_TEXTURE_2D, m_texture);
@@ -11,7 +11,12 @@ RenderTexture::RenderTexture(uint32_t width, uint32_t height) : m_width(width), 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        static_cast<GLsizei>(m_width),
+        static_cast<GLsizei>(m_height),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+    );
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_oldFBO);
 
@@ -80,9 +85,8 @@ std::unique_ptr<uint8_t[]> RenderTexture::getData() const {
         return nullptr;
     }
 
-    auto data = std::make_unique<uint8_t[]>(m_width * m_height * 3);
+    auto data = std::make_unique<uint8_t[]>(m_width * m_height * 4);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glBindTexture(GL_TEXTURE_2D, m_texture);
-    glReadPixels(0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, data.get());
+    glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, data.get());
     return data;
 }
