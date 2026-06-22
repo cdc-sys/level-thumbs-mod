@@ -1,6 +1,7 @@
 #include "ThumbnailManager.hpp"
 #include "SettingsManager.hpp"
 
+#include <asp/fs.hpp>
 #include <Geode/utils/web.hpp>
 // #define DISABLE_FILE_CACHING 1
 
@@ -28,7 +29,7 @@ ThumbnailManager::ThumbnailManager() {
         auto quality = static_cast<Quality>(qualityInt);
         GEODE_UNWRAP_INTO(uint64_t timestamp, val["lastAccess"].asInt());
 
-        if (!std::filesystem::exists(getThumbnailPath(host, levelID, quality))) {
+        if (!asp::fs::exists(getThumbnailPath(host, levelID, quality))) {
             return Err("Cached file does not exist");
         }
 
