@@ -298,7 +298,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        auto res = imgp::encode::webp(data.get(), 1920, 1080, false, 100);
+        auto res = imgp::encode::webp(data.get(), 1920, 1080, true, 100);
         if (!res) {
             log::error("Failed to take screenshot: {}", res.unwrapErr());
             return;
