@@ -6,11 +6,12 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v2.3.0",
+    "version": "v2.3.1",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
     "links": {
+        "homepage": "https://levelthumbs.prevter.me",
         "community": "https://discord.gg/GuagJDsqds",
         "source": "https://github.com/cdc-sys/level-thumbs-mod"
     },

@@ -1,3 +1,11 @@
+# v2.3.1
+- Fixed some encoding issues with submission notes (allow punctuation being typed).
+- Updated in-game rules.
+- Fixed black screen bug when taking thumbnails on some devices.
+- Fixed a very rare crash with locally cached thumbnails.
+- Hide respawn circle for second player.
+- More Low Detail Mode checks when taking thumbnails.
+
 # v2.3.0
 - Added a warning about Globed platformer indicators.
 - The mod now requires submission notes for replacements.
