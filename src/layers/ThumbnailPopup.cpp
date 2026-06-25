@@ -58,6 +58,8 @@ public:
 
         auto textInput = TextInput::create(250, "Enter submission note...", "bigFont.fnt");
         textInput->setString(m_currentNote);
+        textInput->setCommonFilter(CommonFilter::Any);
+        textInput->setMaxCharCount(300);
         textInput->setCallback([this](auto& str){
             m_currentNote = str;
         });
