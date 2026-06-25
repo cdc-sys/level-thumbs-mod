@@ -81,12 +81,37 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
     }
 
     void onScreenshot(CCObject*) {
+    #ifdef GEODE_IS_MOBILE
+        if (!Loader::get()->getLoadedMod("weebify.high-graphics-android")) {
+            MDPopup::create(
+                "Screenshot Error",
+                "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
+                "Please install the \"<cl>High Graphics on Mobile</c>\" mod and enable the change in Geometry Dash settings:\n\n"
+                "<mod:weebify.high-graphics-android>\n\n"
+                "Additionally make sure to install the \"<cl>Shader Precision Fix</c>\" mod:\n\n"
+                "<mod:prevter.shader-precision-fix>",
+                "OK"
+            )->show();
+            return;
+        }
+
+        if (!Loader::get()->getLoadedMod("prevter.shader-precision-fix")) {
+            MDPopup::create(
+                "Screenshot Error",
+                "Thumbnails can only be taken with \"<cl>Shader Precision Fix</c>\" mod installed.\n"
+                "Please install the mod and try again:\n\n"
+                "<mod:prevter.shader-precision-fix>",
+                "OK"
+            )->show();
+            return;
+        }
+    #endif
+
         if (CCDirector::get()->getContentScaleFactor() < 4.f) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "Thumbnails can only be taken with <cy>High Graphics</c> quality enabled.\n"
-                "Please enable it in the Geometry Dash settings and try again."
-                GEODE_MOBILE(" This requires the \"<cl>High Graphics on Mobile</c>\" mod to be installed and active."),
+                "Please enable it in the Geometry Dash settings and try again.",
                 "OK"
             )->show();
             return;

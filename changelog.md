@@ -1,3 +1,7 @@
+# v2.3.2
+- Improve instructions for high graphics on mobile.
+- Prompt users to install "Shader Precision Fix" mod on mobile when taking thumbnails.
+
 # v2.3.1
 - Fixed some encoding issues with submission notes (allow punctuation being typed).
 - Updated in-game rules.
