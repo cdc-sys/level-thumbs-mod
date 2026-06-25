@@ -53,6 +53,7 @@ static bool sizesMatch(CCSize const& a, CCSize const& b) {
 class $modify(ThumbnailPauseLayer, PauseLayer) {
     struct Fields {
         bool m_shownCloseToStartWarning = false;
+        bool m_shownLowDetailWarning = false;
     };
 
     void customSetup() {
@@ -91,7 +92,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        if (GameManager::get()->m_performanceMode) {
+        if (GameManager::get()->m_performanceMode || GameManager::get()->getGameVariable(GameVar::LowDetail)) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "Thumbnails cannot be taken while <cy>Low Detail Mode</c> is enabled.\n"
@@ -124,6 +125,18 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
                 "You are trying to take a screenshot <cy>very close to level start</c>!\n"
                 "There's a high chance it will be <cr>rejected</c> by moderators, "
                 "only proceed if you're sure there are no better places to take the screenshot.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        if (playLayer->m_lowDetailMode && !m_fields->m_shownLowDetailWarning) {
+            m_fields->m_shownLowDetailWarning = true;
+            FLAlertLayer::create(
+                "Warning",
+                "You are trying to take a screenshot with <cy>Low Detail Mode</c> enabled for this level!\n"
+                "In most cases this will lead to <cr>rejection</c> unless the level requires it as a gimmick.\n"
+                "Consider disabling it and re-entering the level.",
                 "OK"
             )->show();
             return;
