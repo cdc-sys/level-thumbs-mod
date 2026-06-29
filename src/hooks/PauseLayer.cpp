@@ -343,12 +343,12 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         auto levelID = playLayer->m_level->m_levelID;
-        auto saveDir = fmt::format("{}/{}.webp", Mod::get()->getSaveDir(),levelID);
+        auto saveDir = Mod::get()->getSaveDir() / fmt::format("{}.webp", levelID);
         if (auto saveRes = file::writeBinary(saveDir, *res); !saveRes) {
             log::error("Failed to save screenshot: {}", saveRes.unwrapErr());
             return;
         }
 
-        ThumbnailPopup::create(levelID, saveDir, notes::buildSubmissionNote())->show();
+        ThumbnailPopup::create(levelID, string::pathToString(saveDir), notes::buildSubmissionNote())->show();
     }
 };
