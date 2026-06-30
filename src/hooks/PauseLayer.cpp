@@ -237,6 +237,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
         HIDE_NODE(playLayer,"thesillydoggo.qolmod/noclip-tint-overlay");
+        HIDE_NODE(playLayer->getChildByIDRecursive("batch-layer"),"zilko.editor_trail_in_game/drawy-node");
         auto aboveShaderNode = playLayer->m_shaderLayer->getParent();
         HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/hitboxes");
         HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/show-trajectory-draw-node");

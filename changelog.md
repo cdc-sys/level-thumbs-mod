@@ -1,3 +1,6 @@
+# v2.3.3
+- Hide In-Game Editor Trail overlay.
+
 # v2.3.2
 - Improve instructions for high graphics on mobile.
 - Prompt users to install "Shader Precision Fix" mod on mobile when taking thumbnails.
