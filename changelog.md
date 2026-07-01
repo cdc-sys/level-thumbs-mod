@@ -1,3 +1,8 @@
+# v2.4.1
+- Fix a bug where the thumbnail role badge could appear multiple times on your profile.
+- Added caching for viewed badges.
+- Code improvements & downscaled badge sprites that look less blocky.
+
 # v2.4.0
 - Added showing thumbnail role badges on profile.
 - Added syncing your role on startup to hide some warnings. 
