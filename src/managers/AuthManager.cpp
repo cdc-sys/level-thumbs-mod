@@ -146,8 +146,8 @@ AuthManager::LoginFuture AuthManager::login() {
     co_return Ok("success!");
 }
 
-std::string_view AuthManager::getToken(){
-    return Mod::get()->getSavedValue<std::string_view>("token");
+std::string AuthManager::getToken(){
+    return Mod::get()->getSavedValue<std::string>("token");
 }
 
 class $modify(AccountHelpLayer) {
@@ -171,9 +171,15 @@ class $modify(RoleCheckMenuLayer,MenuLayer){
     };
     bool init() {
         if (!MenuLayer::init()) return false;
+
+        if (AuthManager::get().checkedRole) return true;
+
+        auto token = AuthManager::get().getToken();
+
+        if (token.empty()) return true;
         
         auto req = web::WebRequest();
-        req.header("Authorization", std::string(AuthManager::get().getToken()));
+        req.header("Authorization", fmt::format("Bearer {}",token));
 
         this->m_fields->m_myInfoListener.spawn(
             req.get(fmt::format("{}/auth/session",Settings::thumbnailAPIBaseURL())),
@@ -183,8 +189,11 @@ class $modify(RoleCheckMenuLayer,MenuLayer){
                     auto role = json["user"]["role"].asString().unwrapOr("user");
                     AuthManager::get().myRole = getRoleByName(role);
                     geode::log::info("role sucessfully synced, {}",role);
+                    Mod::get()->setSavedValue<std::string>("cached_role", role);
+                    AuthManager::get().checkedRole = true;
                 } else {
-                    geode::log::error("Session check failed: Not logged in");
+                    geode::log::error("Session check failed: {}",res.string());
+                    AuthManager::get().myRole = getRoleByName(Mod::get()->getSavedValue<std::string>("cached_role"));
                 }
             }
         );
