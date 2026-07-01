@@ -6,7 +6,7 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v2.3.3",
+    "version": "v2.4.0",
     "id": "cdc.level_thumbnails",
     "name": "Level Thumbnails",
     "developer": "cdc",
@@ -31,6 +31,12 @@
         ]
     },
     "settings": {
+        "thumb-role-badges": {
+            "name": "Enable Badges",
+            "description": "Enables role badges on the profiles of mod users, turn this off if you don't want to see them.",
+            "type": "bool",
+            "default": true
+        },
         "show-in-browser": {
             "name": "Enable Thumbnails",
             "description": "Enables thumbnails in the <cy>Level Browser</c> and <cy>Search Results</c>. Doesn't affect the <cy>Level Page</c> background.",

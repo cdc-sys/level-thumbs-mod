@@ -13,6 +13,8 @@ class $modify(ProfilePageHook,ProfilePage) {
     };
     void loadPageFromUserInfo(GJUserScore* score) {
         ProfilePage::loadPageFromUserInfo(score);
+
+        if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
         
         auto req = web::WebRequest();
         this->m_fields->m_userInfoListener.spawn(

@@ -1,3 +1,7 @@
+# v2.4.0
+- Added showing thumbnail role badges on profile.
+- Added syncing your role on startup to hide some warnings. 
+
 # v2.3.3
 - Hide In-Game Editor Trail overlay.
 
