@@ -82,6 +82,8 @@ public:
     ThumbnailRole myRole = ThumbnailRole::NONE;
     bool checkedRole = false;
 
+    std::unordered_map<int,ThumbnailRole> badgeCache = {};
+
     AuthManager(AuthManager const&) = delete;
     AuthManager(AuthManager&&) = delete;
     AuthManager& operator=(AuthManager const&) = delete;
