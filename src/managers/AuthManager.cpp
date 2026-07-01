@@ -159,3 +159,31 @@ $execute {
         Mod::get()->getSaveContainer().erase("token");
     });
 }
+
+class $modify(RoleCheckMenuLayer,MenuLayer){
+    struct Fields {
+        TaskHolder<web::WebResponse> m_myInfoListener;
+    };
+    bool init() {
+        if (!MenuLayer::init()) return false;
+        
+        auto req = web::WebRequest();
+        req.header("Authorization", std::string(AuthManager::get().getToken()));
+
+        this->m_fields->m_myInfoListener.spawn(
+            req.get(fmt::format("{}/auth/session",Settings::thumbnailAPIBaseURL())),
+            [](web::WebResponse res){
+                if (res.ok()) {
+                    auto json = res.json().unwrapOrDefault();
+                    auto role = json["user"]["role"].asString().unwrapOr("user");
+                    AuthManager::get().myRole = getRoleByName(role);
+                    geode::log::info("role sucessfully synced, {}",role);
+                } else {
+                    geode::log::error("Session check failed: Not logged in");
+                }
+            }
+        );
+
+        return true;
+    }
+};

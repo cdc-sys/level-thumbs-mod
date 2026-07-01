@@ -145,7 +145,7 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
     }
 }
 void ThumbnailPopup::runSubmissionLogic() {
-    if (m_isReplacement && m_extraNote.empty()) {
+    if (m_isReplacement && m_extraNote.empty() && AuthManager::get().myRole < ThumbnailRole::MODERATOR) {
         FLAlertLayer::create(nullptr,"Error!","<cr>You must add a </c><cy>submission note</c><cr> when submitting a replacement!</c>","OK",nullptr,400)->show();
         return;
     }
