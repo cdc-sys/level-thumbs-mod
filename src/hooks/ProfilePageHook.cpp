@@ -15,6 +15,9 @@ class $modify(ProfilePageHook,ProfilePage) {
         ProfilePage::loadPageFromUserInfo(score);
 
         if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
+
+        auto existingBadge = this->getChildByIDRecursive("levelthumbs-badge"_spr);
+        if (existingBadge) existingBadge->removeFromParent();
         
         auto req = web::WebRequest();
         this->m_fields->m_userInfoListener.spawn(
@@ -31,6 +34,7 @@ class $modify(ProfilePageHook,ProfilePage) {
                         createQuickPopup(roleInfo.name.c_str(),roleInfo.description,"OK",nullptr,[](auto,bool){},true);
                         return;
                     });
+                    badgeButton->setID("levelthumbs-badge"_spr);
                     auto usernameMenu = this->getChildByIDRecursive("username-menu");
                     usernameMenu->addChild(badgeButton);
                     usernameMenu->updateLayout();
