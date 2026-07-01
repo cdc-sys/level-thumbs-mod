@@ -27,14 +27,17 @@ class $modify(ProfilePageHook,ProfilePage) {
                     auto json = res.json().unwrapOrDefault();
                     auto role = json["data"]["role"].asString().unwrapOr("user");
                     auto roleInfo = getRoleInfoByName(role);
+
                     auto badgeSprite = CCSprite::create(roleInfo.badge_sprite.c_str());
                     badgeSprite->setScale(0.075f);
                     //badgeSprite->setAnchorPoint({0.5f,0.55f});
+
                     auto badgeButton = geode::Button::createWithNode(badgeSprite, [roleInfo = std::move(roleInfo)](auto sender){
-                        createQuickPopup(roleInfo.name.c_str(),roleInfo.description,"OK",nullptr,[](auto,bool){},true);
+                        createQuickPopup(roleInfo.name.c_str(), roleInfo.description, "OK", nullptr, [](auto,bool){}, true);
                         return;
                     });
                     badgeButton->setID("levelthumbs-badge"_spr);
+                    
                     auto usernameMenu = this->getChildByIDRecursive("username-menu");
                     usernameMenu->addChild(badgeButton);
                     usernameMenu->updateLayout();

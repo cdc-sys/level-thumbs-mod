@@ -179,7 +179,7 @@ class $modify(RoleCheckMenuLayer,MenuLayer){
         if (token.empty()) return true;
         
         auto req = web::WebRequest();
-        req.header("Authorization", fmt::format("Bearer {}",token));
+        req.header("Authorization", fmt::format("Bearer {}", token));
 
         this->m_fields->m_myInfoListener.spawn(
             req.get(fmt::format("{}/auth/session",Settings::thumbnailAPIBaseURL())),
@@ -187,12 +187,14 @@ class $modify(RoleCheckMenuLayer,MenuLayer){
                 if (res.ok()) {
                     auto json = res.json().unwrapOrDefault();
                     auto role = json["user"]["role"].asString().unwrapOr("user");
+
                     AuthManager::get().myRole = getRoleByName(role);
-                    geode::log::info("role sucessfully synced, {}",role);
-                    Mod::get()->setSavedValue<std::string>("cached_role", role);
                     AuthManager::get().checkedRole = true;
+
+                    Mod::get()->setSavedValue<std::string>("cached_role", role);
+                    geode::log::info("role sucessfully synced, {}", role);
                 } else {
-                    geode::log::error("Session check failed: {}",res.string());
+                    geode::log::error("Session check failed: {}", res.string());
                     AuthManager::get().myRole = getRoleByName(Mod::get()->getSavedValue<std::string>("cached_role"));
                 }
             }
