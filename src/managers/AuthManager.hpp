@@ -24,7 +24,7 @@ static std::unordered_map<ThumbnailRole,ThumbnailRoleInfo> THUMBNAIL_ROLES = {
     {ThumbnailRole::USER,{"LT_Badge_THE.png"_spr,"User","This user has submitted thumbnails to the <co>Level Thumbnails</c> mod."}},
     {ThumbnailRole::VERIFIED,{"LT_Badge_VerThumbnailer.png"_spr,"Verified Thumbnailer","This user has submitted a lot of quality thumbnails to the <co>Level Thumbnails</c> mod."}},
     {ThumbnailRole::MODERATOR,{"LT_Badge_ThumbnailMod.png"_spr,"Thumbnail Moderator","This user is authorized to review thumbnails for the <co>Level Thumbnails</c> mod."}},
-    {ThumbnailRole::ADMIN,{"LT_Badge_ThumbnailAdmin.png"_spr,"Thumbnail Moderator","This user is authorized to <cy>lock levels</c> and promote new <cj>Moderators</c> for the <co>Level Thumbnails</c> mod."}},
+    {ThumbnailRole::ADMIN,{"LT_Badge_ThumbnailAdmin.png"_spr,"Thumbnail Admin","This user is authorized to <cy>lock levels</c> and promote new <cj>Moderators</c> for the <co>Level Thumbnails</c> mod."}},
     {ThumbnailRole::OWNER,{"LT_Badge_Owner.png"_spr,"Owner","This user is an owner of the <co>Level Thumbnails</c> mod."}}
 };
 
