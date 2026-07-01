@@ -5,52 +5,82 @@
 #include "SettingsManager.hpp"
 #include "../layers/LoadingOverlay.hpp"
 
-
 enum class ThumbnailRole {
     NONE = 0,
     USER = 1,
     VERIFIED = 2,
     MODERATOR = 3,
     ADMIN = 4,
-    OWNER = 5
+    OWNER = 5,
 };
+
 struct ThumbnailRoleInfo {
-    std::string badge_sprite;
-    std::string name;
-    std::string description;
+    std::string_view badge_sprite;
+    std::string_view name;
+    std::string_view description;
+
+    constexpr ThumbnailRoleInfo(std::string_view badge_sprite, std::string_view name, std::string_view description)
+        : badge_sprite(badge_sprite), name(name), description(description) {}
 };
 
-static std::unordered_map<ThumbnailRole,ThumbnailRoleInfo> THUMBNAIL_ROLES = {
-    {ThumbnailRole::USER,{"LT_Badge_THE.png"_spr,"User","This user has submitted thumbnails to the <co>Level Thumbnails</c> mod."}},
-    {ThumbnailRole::VERIFIED,{"LT_Badge_VerThumbnailer.png"_spr,"Verified Thumbnailer","This user has submitted a lot of quality thumbnails to the <co>Level Thumbnails</c> mod."}},
-    {ThumbnailRole::MODERATOR,{"LT_Badge_ThumbnailMod.png"_spr,"Thumbnail Moderator","This user is authorized to review thumbnails for the <co>Level Thumbnails</c> mod."}},
-    {ThumbnailRole::ADMIN,{"LT_Badge_ThumbnailAdmin.png"_spr,"Thumbnail Admin","This user is authorized to <cy>lock levels</c> and promote new <cj>Moderators</c> for the <co>Level Thumbnails</c> mod."}},
-    {ThumbnailRole::OWNER,{"LT_Badge_Owner.png"_spr,"Owner","This user is an owner of the <co>Level Thumbnails</c> mod."}}
+constexpr std::array THUMBNAIL_ROLES = {
+    ThumbnailRoleInfo{
+        "LT_Badge_THE.png"_spr,
+        "User",
+        "This user has submitted thumbnails to the <co>Level Thumbnails</c> mod."
+    },
+    ThumbnailRoleInfo{
+        "LT_Badge_VerThumbnailer.png"_spr,
+        "Verified Thumbnailer",
+        "This user has submitted a lot of quality thumbnails to the <co>Level Thumbnails</c> mod."
+    },
+    ThumbnailRoleInfo{
+        "LT_Badge_ThumbnailMod.png"_spr,
+        "Thumbnail Moderator",
+        "This user is authorized to review thumbnails for the <co>Level Thumbnails</c> mod."
+    },
+    ThumbnailRoleInfo{
+        "LT_Badge_ThumbnailAdmin.png"_spr,
+        "Thumbnail Admin",
+        "This user is authorized to <cy>lock levels</c> and promote new <cj>Moderators</c> for the <co>Level Thumbnails</c> mod."
+    },
+    ThumbnailRoleInfo{
+        "LT_Badge_Owner.png"_spr,
+        "Owner",
+        "This user is an owner of the <co>Level Thumbnails</c> mod."
+    }
 };
 
-static std::unordered_map<std::string, ThumbnailRole> THUMBNAIL_ROLE_SERVER_NAMES = {
-    {"user",ThumbnailRole::USER},
-    {"verified",ThumbnailRole::VERIFIED},
-    {"moderator",ThumbnailRole::MODERATOR},
-    {"admin",ThumbnailRole::ADMIN},
-    {"owner",ThumbnailRole::OWNER}
+static geode::utils::StringMap<ThumbnailRole> THUMBNAIL_ROLE_SERVER_NAMES = {
+    {"user", ThumbnailRole::USER},
+    {"verified", ThumbnailRole::VERIFIED},
+    {"moderator", ThumbnailRole::MODERATOR},
+    {"admin", ThumbnailRole::ADMIN},
+    {"owner", ThumbnailRole::OWNER}
 };
 
-inline ThumbnailRole getRoleByName(std::string role) {
-    return THUMBNAIL_ROLE_SERVER_NAMES[role];
+inline ThumbnailRole getRoleByName(std::string_view role) {
+    auto it = THUMBNAIL_ROLE_SERVER_NAMES.find(role);
+    if (it != THUMBNAIL_ROLE_SERVER_NAMES.end()) {
+        return it->second;
+    }
+    return ThumbnailRole::NONE;
 }
 
-inline ThumbnailRoleInfo getRoleInfoByName(std::string role) {
-    return THUMBNAIL_ROLES[getRoleByName(role)];
+inline std::optional<ThumbnailRoleInfo> getRoleInfoByName(std::string_view role) {
+    auto r = getRoleByName(role);
+    if (r == ThumbnailRole::NONE) {
+        return std::nullopt;
+    }
+    return THUMBNAIL_ROLES[static_cast<size_t>(r) - 1];
 }
 
 class AuthManager {
 private:
     AuthManager() = default;
 public:
-
     ThumbnailRole myRole = ThumbnailRole::NONE;
-    bool checkedRole;
+    bool checkedRole = false;
 
     AuthManager(AuthManager const&) = delete;
     AuthManager(AuthManager&&) = delete;

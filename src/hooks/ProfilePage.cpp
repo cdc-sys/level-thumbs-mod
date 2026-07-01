@@ -1,9 +1,10 @@
-#include <Geode/modify/ProfilePage.hpp>
-#include <Geode/utils/web.hpp>
-#include "../managers/SettingsManager.hpp"
-#include "../managers/AuthManager.hpp"
-#include <Geode/ui/Button.hpp>
 #include <Geode/Geode.hpp>
+#include <Geode/modify/ProfilePage.hpp>
+#include <Geode/ui/Button.hpp>
+#include <Geode/utils/web.hpp>
+
+#include "../managers/AuthManager.hpp"
+#include "../managers/SettingsManager.hpp"
 
 using namespace geode::prelude;
 
@@ -11,6 +12,7 @@ class $modify(ProfilePageHook,ProfilePage) {
     struct Fields {
         TaskHolder<web::WebResponse> m_userInfoListener;
     };
+
     void loadPageFromUserInfo(GJUserScore* score) {
         ProfilePage::loadPageFromUserInfo(score);
 
@@ -20,30 +22,38 @@ class $modify(ProfilePageHook,ProfilePage) {
         if (existingBadge) existingBadge->removeFromParent();
         
         auto req = web::WebRequest();
+        req.userAgent(USER_AGENT);
+
         this->m_fields->m_userInfoListener.spawn(
-            req.get(fmt::format("{}/user/gd/{}",Settings::thumbnailAPIBaseURL(),this->m_accountID)),
+            req.get(fmt::format("{}/user/gd/{}",Settings::thumbnailAPIBaseURL(), this->m_accountID)),
             [this](web::WebResponse res){
                 if (res.ok()){
                     auto json = res.json().unwrapOrDefault();
                     auto role = json["data"]["role"].asString().unwrapOr("user");
-                    auto roleInfo = getRoleInfoByName(role);
 
-                    auto badgeSprite = CCSprite::create(roleInfo.badge_sprite.c_str());
+                    auto roleInfoOpt = getRoleInfoByName(role);
+                    if (!roleInfoOpt) return;
+
+                    auto& roleInfo = roleInfoOpt.value();
+                    auto badgeSprite = CCSprite::create(roleInfo.badge_sprite.data());
                     badgeSprite->setScale(0.075f);
                     //badgeSprite->setAnchorPoint({0.5f,0.55f});
-
-                    auto badgeButton = geode::Button::createWithNode(badgeSprite, [roleInfo = std::move(roleInfo)](auto sender){
-                        createQuickPopup(roleInfo.name.c_str(), roleInfo.description, "OK", nullptr, [](auto,bool){}, true);
-                        return;
+                    auto badgeButton = Button::createWithNode(badgeSprite, [roleInfo](auto sender) {
+                        createQuickPopup(
+                            roleInfo.name.data(),
+                            std::string(roleInfo.description),
+                            "OK",
+                            nullptr,
+                            [](auto, bool) {},
+                            true
+                        );
                     });
+
                     badgeButton->setID("levelthumbs-badge"_spr);
                     
                     auto usernameMenu = this->getChildByIDRecursive("username-menu");
                     usernameMenu->addChild(badgeButton);
                     usernameMenu->updateLayout();
-
-                } else {
-                    geode::log::info("No info i guess");
                 }
             }
         );
