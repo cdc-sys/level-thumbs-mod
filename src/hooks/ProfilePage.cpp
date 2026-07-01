@@ -73,6 +73,8 @@ class $modify(ProfilePageHook,ProfilePage) {
                     auto role_enum = getRoleByName(role);
                     addBadge(role_enum);
                     AM->badgeCache[m_accountID] = role_enum;
+                } else {
+                    AM->badgeCache[m_accountID] = ThumbnailRole::NONE;
                 }
             }
         );
