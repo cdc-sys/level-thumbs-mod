@@ -17,15 +17,17 @@
     },
     "description": "Adds thumbnails to levels in search.",
     "resources": {
-        "sprites": [
-            "resources/LT_Badge_Owner.png",
-            "resources/LT_Badge_THE.png",
-            "resources/LT_Badge_ThumbnailAdmin.png",
-            "resources/LT_Badge_ThumbnailMod.png",
-            "resources/LT_Badge_VerThumbnailer.png",
-            "resources/thumbnailButton.png",
-            "resources/noThumb.png"
-        ],
+        "sprites": [ "resources/noThumb.png" ],
+        "spritesheets": {
+            "LT_Sheet": [
+                "resources/LT_Badge_Owner.png",
+                "resources/LT_Badge_THE.png",
+                "resources/LT_Badge_ThumbnailAdmin.png",
+                "resources/LT_Badge_ThumbnailMod.png",
+                "resources/LT_Badge_VerThumbnailer.png",
+                "resources/thumbnailButton.png"
+            ]
+        },
         "files": [
             "resources/submission_rules.md"
         ]

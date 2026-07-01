@@ -73,7 +73,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        auto screenshotSprite = CCSprite::create("thumbnailButton.png"_spr);
+        auto screenshotSprite = CCSprite::createWithSpriteFrameName("thumbnailButton.png"_spr);
         screenshotSprite->setScale(0.6f);
         auto screenshotButton = CCMenuItemSpriteExtra::create(screenshotSprite, this, menu_selector(ThumbnailPauseLayer::onScreenshot));
         rightButtonMenu->addChild(screenshotButton);

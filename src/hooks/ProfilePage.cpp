@@ -35,9 +35,8 @@ class $modify(ProfilePageHook,ProfilePage) {
                     if (!roleInfoOpt) return;
 
                     auto& roleInfo = roleInfoOpt.value();
-                    auto badgeSprite = CCSprite::create(roleInfo.badge_sprite.data());
-                    badgeSprite->setScale(0.075f);
-                    //badgeSprite->setAnchorPoint({0.5f,0.55f});
+                    auto badgeSprite = CCSprite::createWithSpriteFrameName(roleInfo.badge_sprite.data());
+                    // badgeSprite->setAnchorPoint({0.5f,0.55f});
                     auto badgeButton = Button::createWithNode(badgeSprite, [roleInfo](auto sender) {
                         createQuickPopup(
                             roleInfo.name.data(),
