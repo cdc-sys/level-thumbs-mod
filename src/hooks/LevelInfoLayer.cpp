@@ -241,7 +241,7 @@ class $modify(ThumbnailLevelInfoLayer, LevelInfoLayer) {
 
         if (auto menu = getChildByID("left-side-menu")) {
             if (Settings::showThumbnailButton()) {
-                auto sprite = CCSprite::create("thumbnailButton.png"_spr);
+                auto sprite = CCSprite::createWithSpriteFrameName("thumbnailButton.png"_spr);
                 auto button = CCMenuItemExt::createSpriteExtra(sprite,[this](CCObject* sender){
                     ThumbnailPopup::create(m_level->m_levelID)->show();
                 });
