@@ -9,6 +9,7 @@
 #include <Geode/ui/Notification.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/loader/SettingV3.hpp>
+#include <Geode/modify/MenuLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -143,6 +144,10 @@ AuthManager::LoginFuture AuthManager::login() {
     );
 
     co_return Ok("success!");
+}
+
+std::string_view AuthManager::getToken(){
+    return Mod::get()->getSavedValue<std::string_view>("token");
 }
 
 class $modify(AccountHelpLayer) {
